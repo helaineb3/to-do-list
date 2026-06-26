@@ -6,6 +6,17 @@ let todos = []
 const form = document.getElementById('todo-form')
 const input = document.getElementById('todo-input')
 const list = document.getElementById('todo-list')
+const errorEl = document.getElementById('todo-error')
+
+function showError(message) {
+  errorEl.textContent = message
+  errorEl.hidden = false
+}
+
+function clearError() {
+  errorEl.textContent = ''
+  errorEl.hidden = true
+}
 
 function escapeHtml(text) {
   const el = document.createElement('div')
@@ -44,11 +55,14 @@ async function loadTodos() {
 
   if (error) {
     console.error('Failed to load todos:', error.message)
-    return
+    showError(`Could not load todos: ${error.message}`)
+    return false
   }
 
   todos = data
+  clearError()
   renderTodos()
+  return true
 }
 
 async function addTodo(text) {
@@ -58,6 +72,7 @@ async function addTodo(text) {
 
   if (error) {
     console.error('Failed to add todo:', error.message)
+    showError(`Could not add todo: ${error.message}`)
     return false
   }
 
@@ -75,6 +90,7 @@ async function toggleTodo(id) {
 
   if (error) {
     console.error('Failed to update todo:', error.message)
+    showError(`Could not update todo: ${error.message}`)
     return false
   }
 
@@ -86,6 +102,7 @@ async function deleteTodo(id) {
 
   if (error) {
     console.error('Failed to delete todo:', error.message)
+    showError(`Could not delete todo: ${error.message}`)
     return false
   }
 
