@@ -66,25 +66,19 @@ async function addTodo(text) {
 
 async function toggleTodo(id) {
   const todo = todos.find((t) => t.id === id)
-  if (!todo) return
+  if (!todo) return false
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('todos')
     .update({ is_complete: !todo.is_complete })
     .eq('id', id)
-    .select('id, text, is_complete, created_at')
-    .single()
 
   if (error) {
     console.error('Failed to update todo:', error.message)
-    return
+    return false
   }
 
-  const index = todos.findIndex((t) => t.id === id)
-  if (index !== -1) {
-    todos[index] = data
-    renderTodos()
-  }
+  return true
 }
 
 async function deleteTodo(id) {
@@ -92,11 +86,10 @@ async function deleteTodo(id) {
 
   if (error) {
     console.error('Failed to delete todo:', error.message)
-    return
+    return false
   }
 
-  todos = todos.filter((t) => t.id !== id)
-  renderTodos()
+  return true
 }
 
 form.addEventListener('submit', async (event) => {
@@ -119,9 +112,11 @@ list.addEventListener('click', async (event) => {
   const id = Number(item.dataset.id)
 
   if (event.target.closest('.todo-complete-button')) {
-    await toggleTodo(id)
+    const success = await toggleTodo(id)
+    if (success) await loadTodos()
   } else if (event.target.closest('.todo-delete-button')) {
-    await deleteTodo(id)
+    const success = await deleteTodo(id)
+    if (success) await loadTodos()
   }
 })
 
