@@ -88,16 +88,49 @@
           </form>
         </section>
 
-        <section class="calendar-week" id="calendar-week" aria-label="Week calendar">
+        <section class="calendar-week" id="calendar-section" aria-label="Calendar">
           <div class="calendar-nav">
-            <button type="button" class="calendar-nav-button" id="calendar-prev" aria-label="Previous week">
+            <button type="button" class="calendar-nav-button" id="calendar-prev" aria-label="Previous">
               ←
             </button>
             <p class="calendar-range" id="calendar-range"></p>
-            <button type="button" class="calendar-nav-button" id="calendar-next" aria-label="Next week">
+            <button type="button" class="calendar-nav-button" id="calendar-next" aria-label="Next">
               →
             </button>
           </div>
+          <div class="calendar-view-tabs" role="tablist" aria-label="Calendar view">
+            <button
+              type="button"
+              class="calendar-view-tab"
+              id="calendar-view-day"
+              data-calendar-view="day"
+              role="tab"
+              aria-selected="false"
+            >
+              Day
+            </button>
+            <button
+              type="button"
+              class="calendar-view-tab is-active"
+              id="calendar-view-week"
+              data-calendar-view="week"
+              role="tab"
+              aria-selected="true"
+            >
+              Week
+            </button>
+            <button
+              type="button"
+              class="calendar-view-tab"
+              id="calendar-view-month"
+              data-calendar-view="month"
+              role="tab"
+              aria-selected="false"
+            >
+              Month
+            </button>
+          </div>
+          <div class="calendar-weekdays" id="calendar-weekdays" hidden></div>
           <div class="calendar-days" id="calendar-days"></div>
         </section>
 
@@ -105,7 +138,16 @@
           <header class="day-panel-header">
             <div class="day-panel-heading">
               <h2 class="day-panel-title" id="day-panel-title"></h2>
-              <span class="day-closed-badge" id="day-closed-badge" hidden>Closed</span>
+              <button
+                type="button"
+                class="day-closed-badge"
+                id="day-closed-badge"
+                hidden
+                title="Hover to reopen"
+              >
+                <span class="day-closed-badge-label">Closed</span>
+                <span class="day-closed-badge-reopen">Reopen</span>
+              </button>
             </div>
             <button type="button" class="todo-add-button day-close-trigger" id="close-day-button">
               Close day

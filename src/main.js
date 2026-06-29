@@ -2,9 +2,15 @@ import './style.css'
 import { supabase } from './supabase.js'
 import {
   addDays,
+  addMonths,
   formatDayLabel,
+  formatDayNumber,
+  formatMonthLabel,
   formatWeekRange,
+  getMonthGridDates,
   getWeekDates,
+  getWeekdayLabels,
+  isSameMonth,
   startOfWeek,
   todayISO,
 } from './dates.js'
@@ -15,6 +21,7 @@ let user = null
 let editingCategoryId = null
 let selectedDate = todayISO()
 let weekStart = startOfWeek(selectedDate)
+let calendarViewMode = 'week'
 let showCloseDayPanel = false
 
 const form = document.getElementById('todo-form')
@@ -30,9 +37,11 @@ const signUpForm = document.getElementById('todo-sign-up-form')
 const signInTab = document.getElementById('todo-auth-tab-sign-in')
 const signUpTab = document.getElementById('todo-auth-tab-sign-up')
 const calendarDaysEl = document.getElementById('calendar-days')
+const calendarWeekdaysEl = document.getElementById('calendar-weekdays')
 const calendarRangeEl = document.getElementById('calendar-range')
 const calendarPrevBtn = document.getElementById('calendar-prev')
 const calendarNextBtn = document.getElementById('calendar-next')
+const calendarViewTabs = document.querySelectorAll('[data-calendar-view]')
 const dayPanelTitleEl = document.getElementById('day-panel-title')
 const dayClosedBadgeEl = document.getElementById('day-closed-badge')
 const dayReflectionDisplayEl = document.getElementById('day-reflection-display')
@@ -63,6 +72,8 @@ const CATEGORY_ICON = `
 `
 
 const STARTER_CATEGORIES = ['Work', 'Personal', 'Shopping', 'Health']
+
+let userCategories = []
 
 const CATEGORY_CLASS_MAP = {
   work: 'todo-item-category--work',
@@ -145,17 +156,27 @@ function showAuthTab(tab) {
 }
 
 function renderCategoryOptions(todo) {
-  return STARTER_CATEGORIES.map((category) => {
-    const isActive = todo.category === category
-    const categoryClass = getCategoryClass(category)
-    return `
-      <button
-        type="button"
-        class="todo-category-option ${categoryClass}${isActive ? ' is-active' : ''}"
-        data-category-value="${escapeHtml(category)}"
-      >${escapeHtml(category)}</button>
-    `
-  }).join('')
+  return userCategories
+    .map((category) => {
+      const isActive = todo.category === category.name
+      const categoryClass = getCategoryClass(category.name)
+      return `
+        <div class="todo-category-row">
+          <button
+            type="button"
+            class="todo-category-option ${categoryClass}${isActive ? ' is-active' : ''}"
+            data-category-value="${escapeHtml(category.name)}"
+          >${escapeHtml(category.name)}</button>
+          <button
+            type="button"
+            class="todo-category-delete"
+            data-category-id="${category.id}"
+            aria-label="Delete ${escapeHtml(category.name)} category"
+          >×</button>
+        </div>
+      `
+    })
+    .join('')
 }
 
 function renderTodos() {
@@ -173,16 +194,22 @@ function renderTodos() {
       const categoryPopover = isEditingCategory
         ? `
           <div class="todo-category-popover" role="dialog" aria-label="Choose category">
-            <p class="todo-category-popover-label">Category</p>
+            <p class="todo-category-popover-label">Categories</p>
             <div class="todo-category-options">${renderCategoryOptions(todo)}</div>
-            <input
-              type="text"
-              class="todo-category-input"
-              data-category-input="${todo.id}"
-              value="${escapeHtml(todo.category || '')}"
-              placeholder="Custom category"
-              aria-label="Custom category"
-            />
+            <div class="todo-category-add">
+              <input
+                type="text"
+                class="todo-category-new-input"
+                data-category-new-input="${todo.id}"
+                placeholder="New category"
+                aria-label="New category"
+              />
+              <button
+                type="button"
+                class="todo-category-add-button"
+                data-category-add="${todo.id}"
+              >Add</button>
+            </div>
           </div>
         `
         : ''
@@ -224,8 +251,8 @@ function renderTodos() {
     .join('')
 
   if (editingCategoryId) {
-    const categoryInput = list.querySelector(`[data-category-input="${editingCategoryId}"]`)
-    if (categoryInput) categoryInput.focus()
+    const newCategoryInput = list.querySelector(`[data-category-new-input="${editingCategoryId}"]`)
+    if (newCategoryInput) newCategoryInput.focus()
   }
 }
 
@@ -261,42 +288,150 @@ async function persistTodoOrderFromDom() {
   if (failed?.error) {
     console.error('Failed to reorder todos:', failed.error.message)
     showError(`Could not reorder todos: ${failed.error.message}`)
-    await loadWeekData()
+    await loadCalendarData()
     return false
   }
 
   return true
 }
 
+function getCalendarRange() {
+  if (calendarViewMode === 'day') {
+    return { start: selectedDate, end: selectedDate }
+  }
+
+  if (calendarViewMode === 'week') {
+    return { start: weekStart, end: addDays(weekStart, 6) }
+  }
+
+  const monthDates = getMonthGridDates(selectedDate)
+  return { start: monthDates[0], end: monthDates[monthDates.length - 1] }
+}
+
+function renderCalendarDayButton(dateStr, { monthMode = false } = {}) {
+  const dayTodos = todosForDay(dateStr)
+  const openCount = dayTodos.filter((todo) => !todo.is_complete).length
+  const doneCount = dayTodos.length - openCount
+  const isSelected = dateStr === selectedDate
+  const isClosed = isDayClosed(dateStr)
+  const isToday = dateStr === todayISO()
+  const outsideMonth = monthMode && !isSameMonth(dateStr, selectedDate)
+
+  const label = monthMode ? formatDayNumber(dateStr) : formatDayLabel(dateStr)
+  const countsMarkup = monthMode
+    ? openCount > 0
+      ? `<span class="calendar-day-open">${openCount} open</span>`
+      : ''
+    : `
+      <span class="calendar-day-counts">
+        <span class="calendar-day-open">${openCount} open</span>
+        <span class="calendar-day-done">${doneCount} done</span>
+      </span>
+    `
+
+  return `
+    <button
+      type="button"
+      class="calendar-day${monthMode ? ' calendar-day--month' : ''}${isSelected ? ' is-selected' : ''}${isClosed ? ' is-closed' : ''}${isToday ? ' is-today' : ''}${outsideMonth ? ' is-outside-month' : ''}"
+      data-date="${dateStr}"
+      aria-pressed="${isSelected}"
+      aria-label="${formatDayLabel(dateStr)}"
+    >
+      <span class="calendar-day-label">${label}</span>
+      ${countsMarkup}
+    </button>
+  `
+}
+
+function renderCalendarNav() {
+  let label = ''
+  let prevLabel = 'Previous'
+  let nextLabel = 'Next'
+
+  if (calendarViewMode === 'day') {
+    label = formatDayLabel(selectedDate)
+    prevLabel = 'Previous day'
+    nextLabel = 'Next day'
+  } else if (calendarViewMode === 'week') {
+    label = formatWeekRange(weekStart)
+    prevLabel = 'Previous week'
+    nextLabel = 'Next week'
+  } else {
+    label = formatMonthLabel(selectedDate)
+    prevLabel = 'Previous month'
+    nextLabel = 'Next month'
+  }
+
+  calendarRangeEl.textContent = label
+  calendarPrevBtn.setAttribute('aria-label', prevLabel)
+  calendarNextBtn.setAttribute('aria-label', nextLabel)
+}
+
+function updateViewTabs() {
+  calendarViewTabs.forEach((tab) => {
+    const isActive = tab.dataset.calendarView === calendarViewMode
+    tab.classList.toggle('is-active', isActive)
+    tab.setAttribute('aria-selected', isActive)
+  })
+}
+
 function renderCalendar() {
-  const weekDates = getWeekDates(weekStart)
-  calendarRangeEl.textContent = formatWeekRange(weekStart)
+  renderCalendarNav()
+  updateViewTabs()
 
-  calendarDaysEl.innerHTML = weekDates
-    .map((dateStr) => {
-      const dayTodos = todosForDay(dateStr)
-      const openCount = dayTodos.filter((todo) => !todo.is_complete).length
-      const doneCount = dayTodos.length - openCount
-      const isSelected = dateStr === selectedDate
-      const isClosed = isDayClosed(dateStr)
-      const isToday = dateStr === todayISO()
+  if (calendarViewMode === 'day') {
+    calendarWeekdaysEl.hidden = true
+    calendarDaysEl.hidden = true
+    calendarDaysEl.innerHTML = ''
+    return
+  }
 
-      return `
-        <button
-          type="button"
-          class="calendar-day${isSelected ? ' is-selected' : ''}${isClosed ? ' is-closed' : ''}${isToday ? ' is-today' : ''}"
-          data-date="${dateStr}"
-          aria-pressed="${isSelected}"
-        >
-          <span class="calendar-day-label">${formatDayLabel(dateStr)}</span>
-          <span class="calendar-day-counts">
-            <span class="calendar-day-open">${openCount} open</span>
-            <span class="calendar-day-done">${doneCount} done</span>
-          </span>
-        </button>
-      `
-    })
+  calendarDaysEl.hidden = false
+
+  if (calendarViewMode === 'week') {
+    calendarWeekdaysEl.hidden = true
+    calendarDaysEl.className = 'calendar-days calendar-days--week'
+    calendarDaysEl.innerHTML = getWeekDates(weekStart)
+      .map((dateStr) => renderCalendarDayButton(dateStr))
+      .join('')
+    return
+  }
+
+  calendarWeekdaysEl.hidden = false
+  calendarWeekdaysEl.innerHTML = getWeekdayLabels()
+    .map((weekday) => `<span class="calendar-weekday">${weekday}</span>`)
     .join('')
+
+  calendarDaysEl.className = 'calendar-days calendar-days--month'
+  calendarDaysEl.innerHTML = getMonthGridDates(selectedDate)
+    .map((dateStr) => renderCalendarDayButton(dateStr, { monthMode: true }))
+    .join('')
+}
+
+function navigateCalendar(direction) {
+  if (calendarViewMode === 'day') {
+    selectedDate = addDays(selectedDate, direction)
+  } else if (calendarViewMode === 'week') {
+    selectedDate = addDays(selectedDate, direction * 7)
+    weekStart = startOfWeek(selectedDate)
+  } else {
+    selectedDate = addMonths(selectedDate, direction)
+    weekStart = startOfWeek(selectedDate)
+  }
+
+  showCloseDayPanel = false
+  editingCategoryId = null
+  loadCalendarData()
+}
+
+function setCalendarViewMode(mode) {
+  if (calendarViewMode === mode) return
+
+  calendarViewMode = mode
+  weekStart = startOfWeek(selectedDate)
+  showCloseDayPanel = false
+  editingCategoryId = null
+  loadCalendarData()
 }
 
 function renderDayPanel() {
@@ -331,7 +466,13 @@ function selectDate(dateStr) {
   weekStart = startOfWeek(dateStr)
   showCloseDayPanel = false
   editingCategoryId = null
-  renderUI()
+
+  const { start, end } = getCalendarRange()
+  if (dateStr < start || dateStr > end) {
+    loadCalendarData()
+  } else {
+    renderUI()
+  }
 }
 
 function openCloseDayPanel() {
@@ -394,26 +535,162 @@ async function ensureSession() {
   return true
 }
 
-async function loadWeekData() {
+async function loadUserCategories() {
+  const { data, error } = await supabase
+    .from('user_categories')
+    .select('id, name, sort_order')
+    .eq('user_id', user.id)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Failed to load categories:', error.message)
+    showError(`Could not load categories: ${error.message}`)
+    return false
+  }
+
+  userCategories = data
+
+  if (userCategories.length === 0) {
+    const { error: seedError } = await supabase.from('user_categories').insert(
+      STARTER_CATEGORIES.map((name, index) => ({
+        user_id: user.id,
+        name,
+        sort_order: index + 1,
+      }))
+    )
+
+    if (seedError) {
+      console.error('Failed to seed categories:', seedError.message)
+      showError(`Could not create categories: ${seedError.message}`)
+      return false
+    }
+
+    return loadUserCategories()
+  }
+
+  return true
+}
+
+async function syncCategoriesFromTodos() {
+  const names = [...new Set(todos.map((todo) => todo.category).filter(Boolean))]
+  const missing = names.filter(
+    (name) =>
+      !userCategories.some((category) => category.name.toLowerCase() === name.toLowerCase())
+  )
+
+  if (missing.length === 0) return true
+
+  const { error } = await supabase.from('user_categories').insert(
+    missing.map((name, index) => ({
+      user_id: user.id,
+      name,
+      sort_order: userCategories.length + index + 1,
+    }))
+  )
+
+  if (error) {
+    console.error('Failed to sync categories from todos:', error.message)
+    return false
+  }
+
+  return loadUserCategories()
+}
+
+async function addUserCategory(name, assignToTodoId = null) {
+  const trimmed = name.trim()
+  if (!trimmed) return false
+
+  const existing = userCategories.find(
+    (category) => category.name.toLowerCase() === trimmed.toLowerCase()
+  )
+
+  if (existing) {
+    if (assignToTodoId) return saveCategory(assignToTodoId, existing.name)
+    return true
+  }
+
+  const { data, error } = await supabase
+    .from('user_categories')
+    .insert({
+      user_id: user.id,
+      name: trimmed,
+      sort_order: userCategories.length + 1,
+    })
+    .select('id, name, sort_order')
+    .single()
+
+  if (error) {
+    console.error('Failed to add category:', error.message)
+    showError(`Could not add category: ${error.message}`)
+    return false
+  }
+
+  userCategories.push(data)
+
+  if (assignToTodoId) return saveCategory(assignToTodoId, trimmed)
+
+  if (editingCategoryId) renderTodos()
+  return true
+}
+
+async function deleteUserCategory(categoryId) {
+  const category = userCategories.find((entry) => entry.id === categoryId)
+  if (!category) return false
+
+  const { error: clearTodosError } = await supabase
+    .from('todos')
+    .update({ category: null })
+    .eq('user_id', user.id)
+    .eq('category', category.name)
+
+  if (clearTodosError) {
+    console.error('Failed to clear category from todos:', clearTodosError.message)
+    showError(`Could not clear category from todos: ${clearTodosError.message}`)
+    return false
+  }
+
+  const { error } = await supabase.from('user_categories').delete().eq('id', categoryId)
+
+  if (error) {
+    console.error('Failed to delete category:', error.message)
+    showError(`Could not delete category: ${error.message}`)
+    return false
+  }
+
+  userCategories = userCategories.filter((entry) => entry.id !== categoryId)
+  todos.forEach((todo) => {
+    if (todo.category === category.name) todo.category = null
+  })
+
+  if (editingCategoryId) renderTodos()
+  else await loadCalendarData()
+  return true
+}
+
+async function loadCalendarData() {
   if (!user) return false
 
-  const weekEnd = addDays(weekStart, 6)
+  const categoriesLoaded = await loadUserCategories()
+  if (!categoriesLoaded) return false
+
+  const { start, end } = getCalendarRange()
 
   const [todosResult, reflectionsResult] = await Promise.all([
     supabase
       .from('todos')
       .select('id, text, is_complete, category, day_date, sort_order, created_at')
       .eq('user_id', user.id)
-      .gte('day_date', weekStart)
-      .lte('day_date', weekEnd)
+      .gte('day_date', start)
+      .lte('day_date', end)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true }),
     supabase
       .from('day_reflections')
       .select('day_date, reflection, closed_at')
       .eq('user_id', user.id)
-      .gte('day_date', weekStart)
-      .lte('day_date', weekEnd),
+      .gte('day_date', start)
+      .lte('day_date', end),
   ])
 
   if (todosResult.error) {
@@ -436,6 +713,8 @@ async function loadWeekData() {
   for (const row of reflectionsResult.data) {
     dayReflections[normalizeDate(row.day_date)] = row
   }
+
+  await syncCategoriesFromTodos()
 
   clearError()
   renderUI()
@@ -510,7 +789,7 @@ async function saveCategory(id, category) {
   }
 
   editingCategoryId = null
-  await loadWeekData()
+  await loadCalendarData()
   return true
 }
 
@@ -557,7 +836,29 @@ async function confirmCloseDay() {
   }
 
   showCloseDayPanel = false
-  await loadWeekData()
+  await loadCalendarData()
+  return true
+}
+
+async function reopenDay() {
+  if (!isDayClosed(selectedDate)) return false
+
+  const { error } = await supabase
+    .from('day_reflections')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('day_date', selectedDate)
+
+  if (error) {
+    console.error('Failed to reopen day:', error.message)
+    showError(`Could not reopen day: ${error.message}`)
+    return false
+  }
+
+  delete dayReflections[selectedDate]
+  showCloseDayPanel = false
+  editingCategoryId = null
+  renderUI()
   return true
 }
 
@@ -587,7 +888,7 @@ async function signInWithEmail(email, password) {
 
   user = data.user
   updateAuthUI()
-  await loadWeekData()
+  await loadCalendarData()
   return true
 }
 
@@ -603,7 +904,7 @@ async function signUpWithEmail(email, password) {
 
     user = data.user
     updateAuthUI()
-    await loadWeekData()
+    await loadCalendarData()
 
     if (isAnonymousUser(user)) {
       showError('Check your email to confirm your account.')
@@ -624,7 +925,7 @@ async function signUpWithEmail(email, password) {
   if (data.session) {
     user = data.user
     updateAuthUI()
-    await loadWeekData()
+    await loadCalendarData()
     return true
   }
 
@@ -645,7 +946,7 @@ async function signOut() {
   if (!hasSession) return false
 
   updateAuthUI()
-  await loadWeekData()
+  await loadCalendarData()
   return true
 }
 
@@ -675,19 +976,17 @@ signOutButton.addEventListener('click', () => {
 })
 
 calendarPrevBtn.addEventListener('click', () => {
-  weekStart = addDays(weekStart, -7)
-  selectedDate = weekStart
-  showCloseDayPanel = false
-  editingCategoryId = null
-  loadWeekData()
+  navigateCalendar(-1)
 })
 
 calendarNextBtn.addEventListener('click', () => {
-  weekStart = addDays(weekStart, 7)
-  selectedDate = weekStart
-  showCloseDayPanel = false
-  editingCategoryId = null
-  loadWeekData()
+  navigateCalendar(1)
+})
+
+calendarViewTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    setCalendarViewMode(tab.dataset.calendarView)
+  })
 })
 
 calendarDaysEl.addEventListener('click', (event) => {
@@ -708,6 +1007,10 @@ closeDayConfirmBtn.addEventListener('click', () => {
   confirmCloseDay()
 })
 
+dayClosedBadgeEl.addEventListener('click', () => {
+  reopenDay()
+})
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault()
   const text = input.value.trim()
@@ -717,7 +1020,7 @@ form.addEventListener('submit', async (event) => {
   if (!success) return
 
   input.value = ''
-  await loadWeekData()
+  await loadCalendarData()
   input.focus()
 })
 
@@ -764,6 +1067,20 @@ list.addEventListener('click', async (event) => {
     const item = event.target.closest('.todo-item')
     const id = Number(item.dataset.id)
 
+    if (event.target.closest('.todo-category-delete')) {
+      const deleteButton = event.target.closest('.todo-category-delete')
+      await deleteUserCategory(Number(deleteButton.dataset.categoryId))
+      return
+    }
+
+    if (event.target.closest('.todo-category-add-button')) {
+      const popover = event.target.closest('.todo-category-popover')
+      const newInput = popover.querySelector('.todo-category-new-input')
+      await addUserCategory(newInput.value, id)
+      newInput.value = ''
+      return
+    }
+
     if (event.target.closest('.todo-category-option')) {
       const option = event.target.closest('.todo-category-option')
       const value = option.classList.contains('is-active') ? '' : option.dataset.categoryValue
@@ -779,24 +1096,25 @@ list.addEventListener('click', async (event) => {
 
   if (event.target.closest('.todo-complete-button')) {
     const success = await toggleTodo(id)
-    if (success) await loadWeekData()
+    if (success) await loadCalendarData()
   } else if (event.target.closest('.todo-category-button')) {
     startEditingCategory(id)
   } else if (event.target.closest('.todo-delete-button')) {
     const success = await deleteTodo(id)
-    if (success) await loadWeekData()
+    if (success) await loadCalendarData()
   }
 })
 
 list.addEventListener('keydown', async (event) => {
   if (event.key !== 'Enter') return
 
-  const categoryInput = event.target.closest('[data-category-input]')
-  if (!categoryInput) return
+  const newCategoryInput = event.target.closest('[data-category-new-input]')
+  if (!newCategoryInput) return
 
   event.preventDefault()
-  const id = Number(categoryInput.dataset.categoryInput)
-  await saveCategory(id, categoryInput.value)
+  const id = Number(newCategoryInput.dataset.categoryNewInput)
+  await addUserCategory(newCategoryInput.value, id)
+  newCategoryInput.value = ''
 })
 
 document.addEventListener('click', (event) => {
@@ -810,7 +1128,7 @@ async function init() {
   if (!hasSession) return
 
   updateAuthUI()
-  await loadWeekData()
+  await loadCalendarData()
 }
 
 init()

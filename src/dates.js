@@ -33,6 +33,61 @@ export function formatDayLabel(dateStr) {
   return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
+export function startOfMonth(dateStr) {
+  const date = parseDateISO(dateStr)
+  return formatDateISO(new Date(date.getFullYear(), date.getMonth(), 1))
+}
+
+export function endOfMonth(dateStr) {
+  const date = parseDateISO(dateStr)
+  return formatDateISO(new Date(date.getFullYear(), date.getMonth() + 1, 0))
+}
+
+export function addMonths(dateStr, months) {
+  const date = parseDateISO(dateStr)
+  date.setMonth(date.getMonth() + months)
+  return formatDateISO(date)
+}
+
+export function getMonthGridDates(dateStr) {
+  const monthStart = startOfMonth(dateStr)
+  const monthEnd = endOfMonth(dateStr)
+  const gridStart = startOfWeek(monthStart)
+  const gridEnd = addDays(startOfWeek(monthEnd), 6)
+
+  const dates = []
+  let current = gridStart
+  while (current <= gridEnd) {
+    dates.push(current)
+    current = addDays(current, 1)
+  }
+  return dates
+}
+
+export function formatMonthLabel(dateStr) {
+  const date = parseDateISO(startOfMonth(dateStr))
+  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+}
+
+export function formatDayNumber(dateStr) {
+  return String(parseDateISO(dateStr).getDate())
+}
+
+export function isSameMonth(dateStr, monthAnchorStr) {
+  const date = parseDateISO(dateStr)
+  const anchor = parseDateISO(monthAnchorStr)
+  return date.getFullYear() === anchor.getFullYear() && date.getMonth() === anchor.getMonth()
+}
+
+export function getWeekdayLabels() {
+  const labels = []
+  const monday = startOfWeek(todayISO())
+  for (let index = 0; index < 7; index += 1) {
+    labels.push(formatDayLabel(addDays(monday, index)).split(',')[0])
+  }
+  return labels
+}
+
 export function formatWeekRange(weekStartStr) {
   const end = addDays(weekStartStr, 6)
   const startDate = parseDateISO(weekStartStr)
