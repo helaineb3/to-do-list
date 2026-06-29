@@ -1,26 +1,24 @@
-import { supabase } from '../supabase.js'
 import { state } from '../app/state.js'
 import { addDays } from '../lib/dates.js'
 import { isDayClosed, nextSortOrderForDay } from '../lib/helpers.js'
 import { showError } from '../lib/errors.js'
 import { ui } from '../lib/dom.js'
-import { refreshAppData } from './app-data.js'
+import { refreshAppData } from '../app/refresh.js'
 import { renderAll } from '../ui/render-all.js'
+import * as reflectionsRepo from '../repositories/reflections.js'
+import * as todosRepo from '../repositories/todos.js'
 
 export async function confirmCloseDay() {
   const reflection = ui.closeDayReflectionInput.value.trim()
   const pushIds = [...ui.closeDayPushList.querySelectorAll('.close-day-push-checkbox:checked')]
     .map((checkbox) => Number(checkbox.value))
 
-  const { error: reflectionError } = await supabase.from('day_reflections').upsert(
-    {
-      user_id: state.user.id,
-      day_date: state.selectedDate,
-      reflection,
-      closed_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,day_date' }
-  )
+  const { error: reflectionError } = await reflectionsRepo.upsertDayReflection({
+    userId: state.user.id,
+    dayDate: state.selectedDate,
+    reflection,
+    closedAt: new Date().toISOString(),
+  })
 
   if (reflectionError) {
     console.error('Failed to close day:', reflectionError.message)
@@ -31,14 +29,10 @@ export async function confirmCloseDay() {
   const tomorrow = addDays(state.selectedDate, 1)
 
   if (pushIds.length > 0) {
-    const startOrder = nextSortOrderForDay(tomorrow)
-    const pushResults = await Promise.all(
-      pushIds.map((id, index) =>
-        supabase
-          .from('todos')
-          .update({ day_date: tomorrow, sort_order: startOrder + index })
-          .eq('id', id)
-      )
+    const pushResults = await todosRepo.pushTodosToDay(
+      pushIds,
+      tomorrow,
+      nextSortOrderForDay(tomorrow)
     )
 
     const pushError = pushResults.find((result) => result.error)?.error
@@ -57,11 +51,7 @@ export async function confirmCloseDay() {
 export async function reopenDay() {
   if (!isDayClosed(state.selectedDate)) return false
 
-  const { error } = await supabase
-    .from('day_reflections')
-    .delete()
-    .eq('user_id', state.user.id)
-    .eq('day_date', state.selectedDate)
+  const { error } = await reflectionsRepo.deleteDayReflection(state.user.id, state.selectedDate)
 
   if (error) {
     console.error('Failed to reopen day:', error.message)

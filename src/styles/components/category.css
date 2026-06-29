@@ -1,6 +1,6 @@
 .todo-item-category,
 .todo-category-option {
-  border: 2px solid transparent;
+  border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
 }
 
@@ -11,7 +11,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-normal);
   text-transform: uppercase;
   box-shadow: var(--shadow-raised);
 }
@@ -60,7 +60,7 @@
   font-family: inherit;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-normal);
   text-transform: uppercase;
   text-align: left;
   cursor: pointer;
@@ -87,8 +87,8 @@
   background-color: var(--cat-work-active-bg);
   border-color: var(--cat-work-active-border);
   box-shadow:
-    0 0 0 2px var(--cat-work-ring),
-    3px 3px 0 var(--color-shadow);
+    0 0 0 var(--ring-width-lg) var(--cat-work-ring),
+    var(--shadow-raised-lg);
 }
 
 .todo-category-option.is-active[data-variant='personal'] {
@@ -96,8 +96,8 @@
   background-color: var(--cat-personal-active-bg);
   border-color: var(--cat-personal-active-border);
   box-shadow:
-    0 0 0 2px var(--cat-personal-ring),
-    3px 3px 0 var(--color-shadow);
+    0 0 0 var(--ring-width-lg) var(--cat-personal-ring),
+    var(--shadow-raised-lg);
 }
 
 .todo-category-option.is-active[data-variant='shopping'] {
@@ -105,8 +105,8 @@
   background-color: var(--cat-shopping-active-bg);
   border-color: var(--cat-shopping-active-border);
   box-shadow:
-    0 0 0 2px var(--cat-shopping-ring),
-    3px 3px 0 var(--color-shadow);
+    0 0 0 var(--ring-width-lg) var(--cat-shopping-ring),
+    var(--shadow-raised-lg);
 }
 
 .todo-category-option.is-active[data-variant='health'] {
@@ -114,8 +114,8 @@
   background-color: var(--cat-health-active-bg);
   border-color: var(--cat-health-active-border);
   box-shadow:
-    0 0 0 2px var(--cat-health-ring),
-    3px 3px 0 var(--color-shadow);
+    0 0 0 var(--ring-width-lg) var(--cat-health-ring),
+    var(--shadow-raised-lg);
 }
 
 .todo-category-option.is-active[data-variant='custom'] {
@@ -123,11 +123,11 @@
   background-color: var(--cat-custom-active-bg);
   border-color: var(--cat-custom-active-border);
   box-shadow:
-    0 0 0 2px var(--cat-custom-ring),
-    3px 3px 0 var(--color-shadow);
+    0 0 0 var(--ring-width-lg) var(--cat-custom-ring),
+    var(--shadow-raised-lg);
 }
 
 .todo-category-option:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: var(--outline-width) solid var(--color-accent);
+  outline-offset: var(--outline-offset);
 }

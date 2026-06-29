@@ -9,8 +9,8 @@ body {
   min-height: 100svh;
   background-color: var(--color-bg);
   background-image:
-    linear-gradient(var(--color-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+    linear-gradient(var(--color-grid) var(--grid-line-width), transparent var(--grid-line-width)),
+    linear-gradient(90deg, var(--color-grid) var(--grid-line-width), transparent var(--grid-line-width));
   background-size: var(--grid-size-page) var(--grid-size-page);
 }
 

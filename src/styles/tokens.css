@@ -116,6 +116,7 @@
   --sticker-yellow-border: #facc15;
 
   /* Spacing */
+  --space-2xs: 2px;
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -124,6 +125,8 @@
 
   /* Typography */
   --font-body: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+  --font-size-3xs: 0.6rem;
+  --font-size-2xs: 0.65rem;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
@@ -131,9 +134,37 @@
   --font-size-xl: 1.5rem;
   --line-height-body: 1.5;
   --line-height-tight: 1.25;
+  --line-height-none: 1;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 700;
+  --tracking-normal: 0.04em;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.08em;
+
+  /* Component sizing */
+  --size-icon-sm: 1rem;
+  --size-icon-md: 1.25rem;
+  --size-icon-lg: 1.5rem;
+  --size-icon-xl: 1.75rem;
+  --size-sticker: 2rem;
+  --width-popover: 13rem;
+  --width-app: 48rem;
+  --breakpoint-sm: 40rem;
+  --min-height-calendar-day: 4.5rem;
+  --min-height-calendar-day-month: 3.25rem;
+  --min-height-textarea: 5rem;
+
+  /* Borders & rings */
+  --border-width-thin: 1px;
+  --border-width: 2px;
+  --grid-line-width: 1px;
+  --hatch-size: 4px;
+  --outline-width: 2px;
+  --outline-offset: 2px;
+  --ring-width: 1px;
+  --ring-width-lg: 2px;
+  --color-inset-shadow: rgba(0, 0, 0, 0.06);
 
   /* Border radius — boxy / architectural */
   --radius-none: 0;
@@ -143,10 +174,22 @@
 
   /* Elevation & grid */
   --shadow-offset: 2px;
+  --shadow-offset-md: 3px;
+  --shadow-offset-lg: 4px;
   --shadow-raised: var(--shadow-offset) var(--shadow-offset) 0 var(--color-shadow);
+  --shadow-raised-lg: var(--shadow-offset-md) var(--shadow-offset-md) 0 var(--color-shadow);
+  --shadow-raised-xl: var(--shadow-offset-lg) var(--shadow-offset-lg) 0 var(--color-shadow);
   --shadow-raised-border:
     var(--shadow-offset) var(--shadow-offset) 0 var(--color-shadow),
-    var(--shadow-offset) var(--shadow-offset) 0 1px var(--color-border-strong);
+    var(--shadow-offset) var(--shadow-offset) 0 var(--border-width-thin) var(--color-border-strong);
+  --shadow-raised-lg-border:
+    var(--shadow-offset-md) var(--shadow-offset-md) 0 var(--color-shadow),
+    var(--shadow-offset-md) var(--shadow-offset-md) 0 var(--border-width-thin) var(--color-border-strong);
+  --shadow-app-shell:
+    var(--shadow-raised-xl),
+    var(--shadow-offset-lg) var(--shadow-offset-lg) 0 var(--border-width) var(--color-border-strong);
+  --shadow-inset-depth: inset 0 calc(-1 * var(--shadow-offset-md)) 0 var(--color-inset-shadow);
+  --shadow-focus-ring: 0 0 0 var(--ring-width) var(--color-primary);
 
   --grid-size-page: 24px;
   --grid-size-surface: 16px;

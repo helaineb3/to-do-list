@@ -4,19 +4,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
+  min-width: var(--size-sticker);
+  height: var(--size-sticker);
   padding: 0 var(--space-xs);
-  font-size: 0.65rem;
+  font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-normal);
   text-transform: uppercase;
-  line-height: 1;
-  border: 2px solid var(--color-border-strong);
+  line-height: var(--line-height-none);
+  border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
-  box-shadow:
-    var(--shadow-raised),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-raised), var(--shadow-inset-depth);
   transform: rotate(var(--sticker-rotate));
   user-select: none;
 }
@@ -72,7 +70,7 @@
 .todo-sticker--blue,
 .todo-sticker--purple,
 .todo-sticker--pink {
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   text-transform: none;
   letter-spacing: 0;
 }

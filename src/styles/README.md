@@ -7,7 +7,11 @@
  * Semantic: --color-bg, --color-surface, --color-primary, --color-text-*
  * Categories: --cat-{variant}-{fg|bg|border|active-*|ring}
  * Stickers: --sticker-{variant}-{bg|fg|border}
- * Elevation: --shadow-raised, --shadow-raised-border
+ *
+ * Borders: --border-width-thin, --border-width, --grid-line-width, --ring-width*
+ * Typography: --font-size-3xs through --font-size-xl, --tracking-normal/wide/wider
+ * Sizing: --size-icon-*, --width-app, --width-popover, --min-height-*
+ * Elevation: --shadow-raised, --shadow-raised-lg, --shadow-raised-xl, --shadow-app-shell
  * Motion: --duration-fast, --duration-normal, --ease-pop
- * Layout: --grid-size-page, --grid-size-surface
+ * Layout: --grid-size-page, --grid-size-surface, --breakpoint-sm (reference only; use 40rem in @media)
  */

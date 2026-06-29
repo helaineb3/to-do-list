@@ -1,5 +1,5 @@
 .day-panel {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
 }
 
 .day-panel-header {
@@ -8,7 +8,7 @@
   justify-content: space-between;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
   background-color: var(--color-bg-paper);
 }
 
@@ -23,7 +23,7 @@
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-normal);
   text-transform: uppercase;
   line-height: var(--line-height-tight);
 }
@@ -39,10 +39,10 @@
 
 .day-reflection-display {
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
   background-color: var(--color-surface);
   background-image:
-    linear-gradient(var(--color-grid) 1px, transparent 1px);
+    linear-gradient(var(--color-grid) var(--grid-line-width), transparent var(--grid-line-width));
   background-size: 100% var(--grid-size-page);
 }
 
@@ -54,7 +54,7 @@
   margin: 0 0 var(--space-xs);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
@@ -69,7 +69,7 @@
 
 .close-day-panel {
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
   background-color: var(--color-bg-paper);
 }
 
@@ -81,7 +81,7 @@
   margin: 0 0 var(--space-sm);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
 }
 
@@ -90,7 +90,7 @@
   margin: 0 0 var(--space-xs);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
@@ -107,12 +107,12 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 2px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
 }
 
 .close-day-push-item {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
 }
 
 .close-day-push-item:last-child {
@@ -134,8 +134,8 @@
 
 .close-day-push-checkbox {
   flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
+  width: var(--size-icon-sm);
+  height: var(--size-icon-sm);
   accent-color: var(--color-primary);
 }
 

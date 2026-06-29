@@ -2,21 +2,21 @@
   flex-shrink: 0;
   font-family: inherit;
   font-weight: var(--font-weight-medium);
-  border: 2px solid var(--color-border-strong);
+  border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: var(--outline-width) solid var(--color-accent);
+  outline-offset: var(--outline-offset);
 }
 
 .btn--primary {
   padding: var(--space-sm) var(--space-lg);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-body);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--color-text-inverse);
   background-color: var(--color-primary);
@@ -29,7 +29,7 @@
 .btn--ghost {
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--font-size-sm);
-  line-height: 1;
+  line-height: var(--line-height-none);
   color: var(--color-text);
   background-color: var(--color-bg-paper);
 }
@@ -41,7 +41,7 @@
 .btn--header {
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--font-size-xs);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-normal);
   text-transform: uppercase;
   color: var(--color-text-inverse);
   background-color: transparent;

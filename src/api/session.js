@@ -1,9 +1,9 @@
-import { supabase } from '../supabase.js'
 import { state } from '../app/state.js'
 import { showError } from '../lib/errors.js'
+import * as authRepo from '../repositories/auth.js'
 
 export async function ensureSession() {
-  const { data: { session }, error } = await supabase.auth.getSession()
+  const { data: { session }, error } = await authRepo.getSession()
 
   if (error) {
     console.error('Failed to get session:', error.message)
@@ -16,7 +16,7 @@ export async function ensureSession() {
     return true
   }
 
-  const { data, error: signInError } = await supabase.auth.signInAnonymously()
+  const { data, error: signInError } = await authRepo.signInAnonymously()
 
   if (signInError) {
     console.error('Failed to sign in anonymously:', signInError.message)

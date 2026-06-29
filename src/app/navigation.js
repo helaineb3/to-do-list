@@ -1,7 +1,7 @@
 import { state } from '../app/state.js'
 import { addDays, addMonths, startOfWeek } from '../lib/dates.js'
 import { getCalendarRange } from '../lib/helpers.js'
-import { refreshAppData } from '../api/app-data.js'
+import { refreshAppData } from '../app/refresh.js'
 import { renderAll } from '../ui/render-all.js'
 
 export function selectDate(dateStr) {

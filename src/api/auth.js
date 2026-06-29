@@ -1,12 +1,13 @@
-import { supabase } from '../supabase.js'
 import { state } from '../app/state.js'
 import { isAnonymousUser } from '../lib/helpers.js'
 import { showError } from '../lib/errors.js'
-import { refreshAppData } from './app-data.js'
+import { refreshAppData } from '../app/refresh.js'
 import { updateAuthUI } from '../ui/render-auth.js'
+import { ensureSession } from './session.js'
+import * as authRepo from '../repositories/auth.js'
 
 export async function signInWithEmail(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await authRepo.signInWithPassword(email, password)
 
   if (error) {
     console.error('Failed to sign in:', error.message)
@@ -22,7 +23,7 @@ export async function signInWithEmail(email, password) {
 
 export async function signUpWithEmail(email, password) {
   if (isAnonymousUser(state.user)) {
-    const { data, error } = await supabase.auth.updateUser({ email, password })
+    const { data, error } = await authRepo.updateUser({ email, password })
 
     if (error) {
       console.error('Failed to create account:', error.message)
@@ -42,7 +43,7 @@ export async function signUpWithEmail(email, password) {
     return true
   }
 
-  const { data, error } = await supabase.auth.signUp({ email, password })
+  const { data, error } = await authRepo.signUp({ email, password })
 
   if (error) {
     console.error('Failed to sign up:', error.message)
@@ -62,7 +63,7 @@ export async function signUpWithEmail(email, password) {
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
+  const { error } = await authRepo.signOut()
 
   if (error) {
     console.error('Failed to sign out:', error.message)
@@ -70,7 +71,6 @@ export async function signOut() {
     return false
   }
 
-  const { ensureSession } = await import('./session.js')
   const hasSession = await ensureSession()
   if (!hasSession) return false
 
