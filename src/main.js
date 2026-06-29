@@ -129,7 +129,6 @@ function renderTodos() {
               placeholder="Custom category"
               aria-label="Custom category"
             />
-            ${todo.category ? `<button type="button" class="todo-category-remove">Remove category</button>` : ''}
           </div>
         `
         : ''
@@ -409,14 +408,10 @@ list.addEventListener('click', async (event) => {
     const item = event.target.closest('.todo-item')
     const id = Number(item.dataset.id)
 
-    if (event.target.closest('.todo-category-remove')) {
-      await saveCategory(id, '')
-      return
-    }
-
     if (event.target.closest('.todo-category-option')) {
       const option = event.target.closest('.todo-category-option')
-      await saveCategory(id, option.dataset.categoryValue)
+      const value = option.classList.contains('is-active') ? '' : option.dataset.categoryValue
+      await saveCategory(id, value)
     }
     return
   }
