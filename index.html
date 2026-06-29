@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>todo-list-app</title>
+    <title>weekly to-dos</title>
   </head>
   <body>
     <div id="app">
       <main class="todo-app">
         <header class="todo-header">
-          <h1 class="todo-title">Todos</h1>
+          <h1 class="todo-title">weekly to-dos</h1>
           <div class="todo-auth-user" id="todo-auth-user" hidden>
             <span class="todo-auth-email" id="todo-auth-email"></span>
             <button type="button" class="todo-sign-out-button" id="todo-sign-out-button">
@@ -88,6 +88,54 @@
           </form>
         </section>
 
+        <section class="calendar-week" id="calendar-week" aria-label="Week calendar">
+          <div class="calendar-nav">
+            <button type="button" class="calendar-nav-button" id="calendar-prev" aria-label="Previous week">
+              ←
+            </button>
+            <p class="calendar-range" id="calendar-range"></p>
+            <button type="button" class="calendar-nav-button" id="calendar-next" aria-label="Next week">
+              →
+            </button>
+          </div>
+          <div class="calendar-days" id="calendar-days"></div>
+        </section>
+
+        <section class="day-panel" id="day-panel">
+          <header class="day-panel-header">
+            <div class="day-panel-heading">
+              <h2 class="day-panel-title" id="day-panel-title"></h2>
+              <span class="day-closed-badge" id="day-closed-badge" hidden>Closed</span>
+            </div>
+            <button type="button" class="todo-add-button day-close-trigger" id="close-day-button">
+              Close day
+            </button>
+          </header>
+
+          <div class="day-reflection-display" id="day-reflection-display" hidden>
+            <p class="day-reflection-label">Reflection</p>
+            <p class="day-reflection-text" id="day-reflection-text"></p>
+          </div>
+
+          <section class="close-day-panel" id="close-day-panel" hidden>
+            <h3 class="close-day-title">Close out this day</h3>
+            <label class="close-day-label" for="close-day-reflection">Reflection</label>
+            <textarea
+              id="close-day-reflection"
+              class="close-day-reflection"
+              rows="4"
+              placeholder="What happened today? What do you want to remember?"
+            ></textarea>
+            <div class="close-day-push" id="close-day-push-section" hidden>
+              <p class="close-day-label">Push to tomorrow</p>
+              <ul class="close-day-push-list" id="close-day-push-list"></ul>
+            </div>
+            <div class="close-day-actions">
+              <button type="button" class="todo-add-button" id="close-day-confirm">Close day</button>
+              <button type="button" class="calendar-nav-button" id="close-day-cancel">Cancel</button>
+            </div>
+          </section>
+
         <form class="todo-form" id="todo-form">
           <input
             type="text"
@@ -104,6 +152,7 @@
         <p class="todo-error" id="todo-error" hidden></p>
 
         <ul class="todo-list" id="todo-list"></ul>
+        </section>
       </main>
     </div>
     <script type="module" src="/src/main.js"></script>

@@ -1,9 +1,21 @@
 import './style.css'
 import { supabase } from './supabase.js'
+import {
+  addDays,
+  formatDayLabel,
+  formatWeekRange,
+  getWeekDates,
+  startOfWeek,
+  todayISO,
+} from './dates.js'
 
 let todos = []
+let dayReflections = {}
 let user = null
 let editingCategoryId = null
+let selectedDate = todayISO()
+let weekStart = startOfWeek(selectedDate)
+let showCloseDayPanel = false
 
 const form = document.getElementById('todo-form')
 const input = document.getElementById('todo-input')
@@ -17,6 +29,21 @@ const signInForm = document.getElementById('todo-sign-in-form')
 const signUpForm = document.getElementById('todo-sign-up-form')
 const signInTab = document.getElementById('todo-auth-tab-sign-in')
 const signUpTab = document.getElementById('todo-auth-tab-sign-up')
+const calendarDaysEl = document.getElementById('calendar-days')
+const calendarRangeEl = document.getElementById('calendar-range')
+const calendarPrevBtn = document.getElementById('calendar-prev')
+const calendarNextBtn = document.getElementById('calendar-next')
+const dayPanelTitleEl = document.getElementById('day-panel-title')
+const dayClosedBadgeEl = document.getElementById('day-closed-badge')
+const dayReflectionDisplayEl = document.getElementById('day-reflection-display')
+const dayReflectionTextEl = document.getElementById('day-reflection-text')
+const closeDayButton = document.getElementById('close-day-button')
+const closeDayPanel = document.getElementById('close-day-panel')
+const closeDayReflectionInput = document.getElementById('close-day-reflection')
+const closeDayPushSection = document.getElementById('close-day-push-section')
+const closeDayPushList = document.getElementById('close-day-push-list')
+const closeDayConfirmBtn = document.getElementById('close-day-confirm')
+const closeDayCancelBtn = document.getElementById('close-day-cancel')
 
 const DELETE_ICON = `
   <svg class="todo-action-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
@@ -73,6 +100,19 @@ function isAnonymousUser(currentUser) {
   return currentUser?.is_anonymous === true || !currentUser?.email
 }
 
+function isDayClosed(dateStr) {
+  return Boolean(dayReflections[dateStr])
+}
+
+function todosForDay(dateStr) {
+  return todos.filter((todo) => todo.day_date === dateStr)
+}
+
+function normalizeDate(dateVal) {
+  if (!dateVal) return dateVal
+  return String(dateVal).slice(0, 10)
+}
+
 function updateAuthUI() {
   const isEmailUser = user && !isAnonymousUser(user)
 
@@ -107,13 +147,15 @@ function renderCategoryOptions(todo) {
 }
 
 function renderTodos() {
-  list.innerHTML = todos
+  const dayTodos = todosForDay(selectedDate)
+  const dayClosed = isDayClosed(selectedDate)
+
+  list.innerHTML = dayTodos
     .map((todo) => {
       const completeClass = todo.is_complete ? ' is-complete' : ''
       const completeLabel = todo.is_complete ? 'Mark incomplete' : 'Mark complete'
       const checkMark = todo.is_complete ? '✓' : ''
       const isEditingCategory = editingCategoryId === todo.id
-
       const categoryMarkup = todo.category ? renderCategoryBadge(todo.category) : ''
 
       const categoryPopover = isEditingCategory
@@ -134,12 +176,13 @@ function renderTodos() {
         : ''
 
       return `
-        <li class="todo-item${completeClass}" data-id="${todo.id}">
+        <li class="todo-item${completeClass}${dayClosed ? ' is-day-closed' : ''}" data-id="${todo.id}">
           <button
             type="button"
             class="todo-complete-button"
             aria-label="${completeLabel}"
             aria-pressed="${todo.is_complete}"
+            ${dayClosed ? 'disabled' : ''}
           >${checkMark}</button>
           <div class="todo-item-content">
             ${categoryMarkup}
@@ -152,10 +195,11 @@ function renderTodos() {
                 class="todo-icon-button todo-category-button"
                 aria-label="${todo.category ? 'Edit category' : 'Add category'}"
                 aria-expanded="${isEditingCategory}"
+                ${dayClosed ? 'disabled' : ''}
               >${CATEGORY_ICON}</button>
               ${categoryPopover}
             </div>
-            <button type="button" class="todo-icon-button todo-delete-button" aria-label="Delete todo">${DELETE_ICON}</button>
+            <button type="button" class="todo-icon-button todo-delete-button" aria-label="Delete todo" ${dayClosed ? 'disabled' : ''}>${DELETE_ICON}</button>
           </div>
         </li>
       `
@@ -166,6 +210,105 @@ function renderTodos() {
     const categoryInput = list.querySelector(`[data-category-input="${editingCategoryId}"]`)
     if (categoryInput) categoryInput.focus()
   }
+}
+
+function renderCalendar() {
+  const weekDates = getWeekDates(weekStart)
+  calendarRangeEl.textContent = formatWeekRange(weekStart)
+
+  calendarDaysEl.innerHTML = weekDates
+    .map((dateStr) => {
+      const dayTodos = todosForDay(dateStr)
+      const openCount = dayTodos.filter((todo) => !todo.is_complete).length
+      const doneCount = dayTodos.length - openCount
+      const isSelected = dateStr === selectedDate
+      const isClosed = isDayClosed(dateStr)
+      const isToday = dateStr === todayISO()
+
+      return `
+        <button
+          type="button"
+          class="calendar-day${isSelected ? ' is-selected' : ''}${isClosed ? ' is-closed' : ''}${isToday ? ' is-today' : ''}"
+          data-date="${dateStr}"
+          aria-pressed="${isSelected}"
+        >
+          <span class="calendar-day-label">${formatDayLabel(dateStr)}</span>
+          <span class="calendar-day-counts">
+            <span class="calendar-day-open">${openCount} open</span>
+            <span class="calendar-day-done">${doneCount} done</span>
+          </span>
+        </button>
+      `
+    })
+    .join('')
+}
+
+function renderDayPanel() {
+  const closed = isDayClosed(selectedDate)
+  const reflection = dayReflections[selectedDate]
+
+  dayPanelTitleEl.textContent = formatDayLabel(selectedDate)
+  dayClosedBadgeEl.hidden = !closed
+  closeDayButton.hidden = closed
+  form.hidden = closed
+  closeDayPanel.hidden = !showCloseDayPanel || closed
+
+  if (closed && reflection) {
+    dayReflectionDisplayEl.hidden = false
+    dayReflectionTextEl.textContent = reflection.reflection
+  } else {
+    dayReflectionDisplayEl.hidden = true
+    dayReflectionTextEl.textContent = ''
+  }
+
+  renderTodos()
+}
+
+function renderUI() {
+  renderCalendar()
+  renderDayPanel()
+}
+
+function selectDate(dateStr) {
+  selectedDate = dateStr
+  weekStart = startOfWeek(dateStr)
+  showCloseDayPanel = false
+  editingCategoryId = null
+  renderUI()
+}
+
+function openCloseDayPanel() {
+  if (isDayClosed(selectedDate)) return
+
+  const incompleteTodos = todosForDay(selectedDate).filter((todo) => !todo.is_complete)
+
+  closeDayReflectionInput.value = dayReflections[selectedDate]?.reflection || ''
+
+  if (incompleteTodos.length > 0) {
+    closeDayPushSection.hidden = false
+    closeDayPushList.innerHTML = incompleteTodos
+      .map((todo) => `
+        <li class="close-day-push-item">
+          <label class="close-day-push-label">
+            <input type="checkbox" class="close-day-push-checkbox" value="${todo.id}" checked />
+            <span>${escapeHtml(todo.text)}</span>
+          </label>
+        </li>
+      `)
+      .join('')
+  } else {
+    closeDayPushSection.hidden = true
+    closeDayPushList.innerHTML = ''
+  }
+
+  showCloseDayPanel = true
+  closeDayPanel.hidden = false
+  closeDayReflectionInput.focus()
+}
+
+function closeCloseDayPanel() {
+  showCloseDayPanel = false
+  closeDayPanel.hidden = true
 }
 
 async function ensureSession() {
@@ -194,31 +337,64 @@ async function ensureSession() {
   return true
 }
 
-async function loadTodos() {
+async function loadWeekData() {
   if (!user) return false
 
-  const { data, error } = await supabase
-    .from('todos')
-    .select('id, text, is_complete, category, created_at')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
+  const weekEnd = addDays(weekStart, 6)
 
-  if (error) {
-    console.error('Failed to load todos:', error.message)
-    showError(`Could not load todos: ${error.message}`)
+  const [todosResult, reflectionsResult] = await Promise.all([
+    supabase
+      .from('todos')
+      .select('id, text, is_complete, category, day_date, created_at')
+      .eq('user_id', user.id)
+      .gte('day_date', weekStart)
+      .lte('day_date', weekEnd)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('day_reflections')
+      .select('day_date, reflection, closed_at')
+      .eq('user_id', user.id)
+      .gte('day_date', weekStart)
+      .lte('day_date', weekEnd),
+  ])
+
+  if (todosResult.error) {
+    console.error('Failed to load todos:', todosResult.error.message)
+    showError(`Could not load todos: ${todosResult.error.message}`)
     return false
   }
 
-  todos = data
+  if (reflectionsResult.error) {
+    console.error('Failed to load reflections:', reflectionsResult.error.message)
+    showError(`Could not load reflections: ${reflectionsResult.error.message}`)
+    return false
+  }
+
+  todos = todosResult.data.map((todo) => ({
+    ...todo,
+    day_date: normalizeDate(todo.day_date),
+  }))
+  dayReflections = {}
+  for (const row of reflectionsResult.data) {
+    dayReflections[normalizeDate(row.day_date)] = row
+  }
+
   clearError()
-  renderTodos()
+  renderUI()
   return true
 }
 
 async function addTodo(text) {
+  if (isDayClosed(selectedDate)) return false
+
   const { error } = await supabase
     .from('todos')
-    .insert({ text, is_complete: false, user_id: user.id })
+    .insert({
+      text,
+      is_complete: false,
+      user_id: user.id,
+      day_date: selectedDate,
+    })
 
   if (error) {
     console.error('Failed to add todo:', error.message)
@@ -230,6 +406,7 @@ async function addTodo(text) {
 }
 
 async function toggleTodo(id) {
+  if (isDayClosed(selectedDate)) return false
   const todo = todos.find((t) => t.id === id)
   if (!todo) return false
 
@@ -248,6 +425,7 @@ async function toggleTodo(id) {
 }
 
 async function deleteTodo(id) {
+  if (isDayClosed(selectedDate)) return false
   const { error } = await supabase.from('todos').delete().eq('id', id)
 
   if (error) {
@@ -273,7 +451,48 @@ async function saveCategory(id, category) {
   }
 
   editingCategoryId = null
-  await loadTodos()
+  await loadWeekData()
+  return true
+}
+
+async function confirmCloseDay() {
+  const reflection = closeDayReflectionInput.value.trim()
+  const pushIds = [...closeDayPushList.querySelectorAll('.close-day-push-checkbox:checked')]
+    .map((checkbox) => Number(checkbox.value))
+
+  const { error: reflectionError } = await supabase.from('day_reflections').upsert(
+    {
+      user_id: user.id,
+      day_date: selectedDate,
+      reflection,
+      closed_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id,day_date' }
+  )
+
+  if (reflectionError) {
+    console.error('Failed to close day:', reflectionError.message)
+    showError(`Could not close day: ${reflectionError.message}`)
+    return false
+  }
+
+  const tomorrow = addDays(selectedDate, 1)
+
+  if (pushIds.length > 0) {
+    const { error: pushError } = await supabase
+      .from('todos')
+      .update({ day_date: tomorrow })
+      .in('id', pushIds)
+
+    if (pushError) {
+      console.error('Failed to push todos:', pushError.message)
+      showError(`Could not push todos: ${pushError.message}`)
+      return false
+    }
+  }
+
+  showCloseDayPanel = false
+  await loadWeekData()
   return true
 }
 
@@ -303,7 +522,7 @@ async function signInWithEmail(email, password) {
 
   user = data.user
   updateAuthUI()
-  await loadTodos()
+  await loadWeekData()
   return true
 }
 
@@ -319,7 +538,7 @@ async function signUpWithEmail(email, password) {
 
     user = data.user
     updateAuthUI()
-    await loadTodos()
+    await loadWeekData()
 
     if (isAnonymousUser(user)) {
       showError('Check your email to confirm your account.')
@@ -340,7 +559,7 @@ async function signUpWithEmail(email, password) {
   if (data.session) {
     user = data.user
     updateAuthUI()
-    await loadTodos()
+    await loadWeekData()
     return true
   }
 
@@ -361,7 +580,7 @@ async function signOut() {
   if (!hasSession) return false
 
   updateAuthUI()
-  await loadTodos()
+  await loadWeekData()
   return true
 }
 
@@ -390,6 +609,40 @@ signOutButton.addEventListener('click', () => {
   signOut()
 })
 
+calendarPrevBtn.addEventListener('click', () => {
+  weekStart = addDays(weekStart, -7)
+  selectedDate = weekStart
+  showCloseDayPanel = false
+  editingCategoryId = null
+  loadWeekData()
+})
+
+calendarNextBtn.addEventListener('click', () => {
+  weekStart = addDays(weekStart, 7)
+  selectedDate = weekStart
+  showCloseDayPanel = false
+  editingCategoryId = null
+  loadWeekData()
+})
+
+calendarDaysEl.addEventListener('click', (event) => {
+  const dayButton = event.target.closest('.calendar-day')
+  if (!dayButton) return
+  selectDate(dayButton.dataset.date)
+})
+
+closeDayButton.addEventListener('click', () => {
+  openCloseDayPanel()
+})
+
+closeDayCancelBtn.addEventListener('click', () => {
+  closeCloseDayPanel()
+})
+
+closeDayConfirmBtn.addEventListener('click', () => {
+  confirmCloseDay()
+})
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault()
   const text = input.value.trim()
@@ -399,7 +652,7 @@ form.addEventListener('submit', async (event) => {
   if (!success) return
 
   input.value = ''
-  await loadTodos()
+  await loadWeekData()
   input.focus()
 })
 
@@ -423,24 +676,24 @@ list.addEventListener('click', async (event) => {
 
   if (event.target.closest('.todo-complete-button')) {
     const success = await toggleTodo(id)
-    if (success) await loadTodos()
+    if (success) await loadWeekData()
   } else if (event.target.closest('.todo-category-button')) {
     startEditingCategory(id)
   } else if (event.target.closest('.todo-delete-button')) {
     const success = await deleteTodo(id)
-    if (success) await loadTodos()
+    if (success) await loadWeekData()
   }
 })
 
 list.addEventListener('keydown', async (event) => {
   if (event.key !== 'Enter') return
 
-  const input = event.target.closest('[data-category-input]')
-  if (!input) return
+  const categoryInput = event.target.closest('[data-category-input]')
+  if (!categoryInput) return
 
   event.preventDefault()
-  const id = Number(input.dataset.categoryInput)
-  await saveCategory(id, input.value)
+  const id = Number(categoryInput.dataset.categoryInput)
+  await saveCategory(id, categoryInput.value)
 })
 
 document.addEventListener('click', (event) => {
@@ -454,7 +707,7 @@ async function init() {
   if (!hasSession) return
 
   updateAuthUI()
-  await loadTodos()
+  await loadWeekData()
 }
 
 init()
