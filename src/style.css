@@ -418,6 +418,29 @@ body {
   border-bottom: 1px solid var(--color-border);
 }
 
+.todo-item.is-dragging {
+  opacity: 0.45;
+  background-color: var(--color-accent-muted);
+}
+
+.todo-item-drag-zone {
+  touch-action: none;
+}
+
+.todo-item:hover .todo-item-drag-zone {
+  cursor: grab;
+}
+
+.todo-item.is-dragging .todo-item-drag-zone {
+  cursor: grabbing;
+}
+
+@media (hover: none) {
+  .todo-item-drag-zone {
+    cursor: grab;
+  }
+}
+
 .todo-item:last-child {
   border-bottom: none;
 }
@@ -1026,6 +1049,10 @@ body {
 }
 
 .todo-form[hidden] {
+  display: none;
+}
+
+.todo-list[hidden] {
   display: none;
 }
 

@@ -105,7 +105,19 @@ function isDayClosed(dateStr) {
 }
 
 function todosForDay(dateStr) {
-  return todos.filter((todo) => todo.day_date === dateStr)
+  return todos
+    .filter((todo) => todo.day_date === dateStr)
+    .sort((a, b) => {
+      const orderDiff = (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      if (orderDiff !== 0) return orderDiff
+      return new Date(a.created_at) - new Date(b.created_at)
+    })
+}
+
+function nextSortOrderForDay(dateStr) {
+  const dayTodos = todosForDay(dateStr)
+  if (dayTodos.length === 0) return 1
+  return Math.max(...dayTodos.map((todo) => todo.sort_order ?? 0)) + 1
 }
 
 function normalizeDate(dateVal) {
@@ -175,6 +187,8 @@ function renderTodos() {
         `
         : ''
 
+      const contentClass = dayClosed ? 'todo-item-content' : 'todo-item-content todo-item-drag-zone'
+
       return `
         <li class="todo-item${completeClass}${dayClosed ? ' is-day-closed' : ''}" data-id="${todo.id}">
           <button
@@ -184,7 +198,10 @@ function renderTodos() {
             aria-pressed="${todo.is_complete}"
             ${dayClosed ? 'disabled' : ''}
           >${checkMark}</button>
-          <div class="todo-item-content">
+          <div
+            class="${contentClass}"
+            ${dayClosed ? '' : 'draggable="true" title="Drag to reorder"'}
+          >
             ${categoryMarkup}
             <span class="todo-item-text">${escapeHtml(todo.text)}</span>
           </div>
@@ -210,6 +227,45 @@ function renderTodos() {
     const categoryInput = list.querySelector(`[data-category-input="${editingCategoryId}"]`)
     if (categoryInput) categoryInput.focus()
   }
+}
+
+function moveDraggingTodoBefore(targetItem, clientY) {
+  const dragging = list.querySelector('.todo-item.is-dragging')
+  if (!dragging || !targetItem || dragging === targetItem) return
+
+  const rect = targetItem.getBoundingClientRect()
+  const insertBefore = clientY < rect.top + rect.height / 2
+
+  if (insertBefore) {
+    list.insertBefore(dragging, targetItem)
+  } else {
+    list.insertBefore(dragging, targetItem.nextSibling)
+  }
+}
+
+async function persistTodoOrderFromDom() {
+  const orderedIds = [...list.querySelectorAll('.todo-item')].map((item) => Number(item.dataset.id))
+
+  orderedIds.forEach((id, index) => {
+    const todo = todos.find((t) => t.id === id)
+    if (todo) todo.sort_order = index + 1
+  })
+
+  const results = await Promise.all(
+    orderedIds.map((id, index) =>
+      supabase.from('todos').update({ sort_order: index + 1 }).eq('id', id)
+    )
+  )
+
+  const failed = results.find((result) => result.error)
+  if (failed?.error) {
+    console.error('Failed to reorder todos:', failed.error.message)
+    showError(`Could not reorder todos: ${failed.error.message}`)
+    await loadWeekData()
+    return false
+  }
+
+  return true
 }
 
 function renderCalendar() {
@@ -249,8 +305,9 @@ function renderDayPanel() {
 
   dayPanelTitleEl.textContent = formatDayLabel(selectedDate)
   dayClosedBadgeEl.hidden = !closed
-  closeDayButton.hidden = closed
-  form.hidden = closed
+  closeDayButton.hidden = closed || showCloseDayPanel
+  form.hidden = closed || showCloseDayPanel
+  list.hidden = showCloseDayPanel
   closeDayPanel.hidden = !showCloseDayPanel || closed
 
   if (closed && reflection) {
@@ -302,13 +359,13 @@ function openCloseDayPanel() {
   }
 
   showCloseDayPanel = true
-  closeDayPanel.hidden = false
+  renderDayPanel()
   closeDayReflectionInput.focus()
 }
 
 function closeCloseDayPanel() {
   showCloseDayPanel = false
-  closeDayPanel.hidden = true
+  renderDayPanel()
 }
 
 async function ensureSession() {
@@ -345,10 +402,11 @@ async function loadWeekData() {
   const [todosResult, reflectionsResult] = await Promise.all([
     supabase
       .from('todos')
-      .select('id, text, is_complete, category, day_date, created_at')
+      .select('id, text, is_complete, category, day_date, sort_order, created_at')
       .eq('user_id', user.id)
       .gte('day_date', weekStart)
       .lte('day_date', weekEnd)
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true }),
     supabase
       .from('day_reflections')
@@ -394,6 +452,7 @@ async function addTodo(text) {
       is_complete: false,
       user_id: user.id,
       day_date: selectedDate,
+      sort_order: nextSortOrderForDay(selectedDate),
     })
 
   if (error) {
@@ -479,11 +538,17 @@ async function confirmCloseDay() {
   const tomorrow = addDays(selectedDate, 1)
 
   if (pushIds.length > 0) {
-    const { error: pushError } = await supabase
-      .from('todos')
-      .update({ day_date: tomorrow })
-      .in('id', pushIds)
+    const startOrder = nextSortOrderForDay(tomorrow)
+    const pushResults = await Promise.all(
+      pushIds.map((id, index) =>
+        supabase
+          .from('todos')
+          .update({ day_date: tomorrow, sort_order: startOrder + index })
+          .eq('id', id)
+      )
+    )
 
+    const pushError = pushResults.find((result) => result.error)?.error
     if (pushError) {
       console.error('Failed to push todos:', pushError.message)
       showError(`Could not push todos: ${pushError.message}`)
@@ -654,6 +719,44 @@ form.addEventListener('submit', async (event) => {
   input.value = ''
   await loadWeekData()
   input.focus()
+})
+
+list.addEventListener('dragstart', (event) => {
+  const dragZone = event.target.closest('.todo-item-drag-zone')
+  if (!dragZone) return
+
+  const item = dragZone.closest('.todo-item')
+  if (!item) return
+
+  item.classList.add('is-dragging')
+  event.dataTransfer.effectAllowed = 'move'
+  event.dataTransfer.setData('text/plain', item.dataset.id)
+})
+
+list.addEventListener('dragend', (event) => {
+  const dragZone = event.target.closest('.todo-item-drag-zone')
+  if (!dragZone) return
+
+  const item = dragZone.closest('.todo-item')
+  if (item) item.classList.remove('is-dragging')
+  list.querySelectorAll('.todo-item').forEach((el) => el.classList.remove('is-drag-over'))
+})
+
+list.addEventListener('dragover', (event) => {
+  const targetItem = event.target.closest('.todo-item')
+  if (!targetItem || !list.querySelector('.todo-item.is-dragging')) return
+
+  event.preventDefault()
+  event.dataTransfer.dropEffect = 'move'
+  moveDraggingTodoBefore(targetItem, event.clientY)
+})
+
+list.addEventListener('drop', async (event) => {
+  if (!list.querySelector('.todo-item.is-dragging')) return
+
+  event.preventDefault()
+  list.querySelectorAll('.todo-item').forEach((el) => el.classList.remove('is-drag-over'))
+  await persistTodoOrderFromDom()
 })
 
 list.addEventListener('click', async (event) => {
