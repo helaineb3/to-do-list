@@ -777,6 +777,102 @@ body {
   text-decoration: line-through;
 }
 
+.todo-sticker {
+  --sticker-rotate: -8deg;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 var(--space-xs);
+  font-size: 0.65rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    2px 2px 0 var(--color-shadow),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.06);
+  transform: rotate(var(--sticker-rotate));
+  user-select: none;
+}
+
+.todo-sticker--new {
+  animation: todo-sticker-pop 0.45s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+.todo-sticker--gold {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #f59e0b;
+}
+
+.todo-sticker--red {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #f87171;
+}
+
+.todo-sticker--green {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #4ade80;
+}
+
+.todo-sticker--blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #60a5fa;
+}
+
+.todo-sticker--purple {
+  background: #ede9fe;
+  color: #6d28d9;
+  border-color: #a78bfa;
+}
+
+.todo-sticker--pink {
+  background: #fce7f3;
+  color: #be185d;
+  border-color: #f472b6;
+}
+
+.todo-sticker--yellow {
+  background: #fef9c3;
+  color: #a16207;
+  border-color: #facc15;
+}
+
+.todo-sticker--gold,
+.todo-sticker--green,
+.todo-sticker--blue,
+.todo-sticker--purple,
+.todo-sticker--pink {
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+@keyframes todo-sticker-pop {
+  0% {
+    transform: scale(0.2) rotate(calc(var(--sticker-rotate) - 28deg));
+    opacity: 0;
+  }
+
+  65% {
+    transform: scale(1.12) rotate(calc(var(--sticker-rotate) + 6deg));
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(var(--sticker-rotate));
+    opacity: 1;
+  }
+}
+
 .todo-icon-button {
   flex-shrink: 0;
   display: inline-flex;
@@ -840,11 +936,19 @@ body {
 
 .calendar-range {
   margin: 0;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: 0.06em;
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  text-align: center;
+  color: var(--color-text);
+  background-color: var(--color-bg-paper);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 var(--color-shadow);
 }
 
 .calendar-nav-button {

@@ -73,7 +73,19 @@ const CATEGORY_ICON = `
 
 const STARTER_CATEGORIES = ['Work', 'Personal', 'Shopping', 'Health']
 
+const COMPLETION_STICKERS = [
+  { label: 'A+', variant: 'red', rotate: -10 },
+  { label: '⭐', variant: 'gold', rotate: 8 },
+  { label: '🍎', variant: 'green', rotate: -6 },
+  { label: '👍', variant: 'blue', rotate: 12 },
+  { label: '✨', variant: 'purple', rotate: -14 },
+  { label: '💯', variant: 'pink', rotate: 6 },
+  { label: 'GREAT!', variant: 'yellow', rotate: -8 },
+  { label: '🌟', variant: 'gold', rotate: 10 },
+]
+
 let userCategories = []
+let recentlyCompletedId = null
 
 const CATEGORY_CLASS_MAP = {
   work: 'todo-item-category--work',
@@ -89,6 +101,18 @@ function getCategoryClass(category) {
 
 function renderCategoryBadge(category) {
   return `<span class="todo-item-category ${getCategoryClass(category)}">${escapeHtml(category)}</span>`
+}
+
+function renderCompletionSticker(todoId) {
+  const sticker = COMPLETION_STICKERS[todoId % COMPLETION_STICKERS.length]
+  const isNew = recentlyCompletedId === todoId
+  return `
+    <span
+      class="todo-sticker todo-sticker--${sticker.variant}${isNew ? ' todo-sticker--new' : ''}"
+      style="--sticker-rotate: ${sticker.rotate}deg"
+      aria-hidden="true"
+    >${sticker.label}</span>
+  `
 }
 
 function showError(message) {
@@ -215,6 +239,7 @@ function renderTodos() {
         : ''
 
       const contentClass = dayClosed ? 'todo-item-content' : 'todo-item-content todo-item-drag-zone'
+      const stickerMarkup = todo.is_complete ? renderCompletionSticker(todo.id) : ''
 
       return `
         <li class="todo-item${completeClass}${dayClosed ? ' is-day-closed' : ''}" data-id="${todo.id}">
@@ -232,6 +257,7 @@ function renderTodos() {
             ${categoryMarkup}
             <span class="todo-item-text">${escapeHtml(todo.text)}</span>
           </div>
+          ${stickerMarkup}
           <div class="todo-item-actions">
             <div class="todo-category-anchor">
               <button
@@ -254,6 +280,8 @@ function renderTodos() {
     const newCategoryInput = list.querySelector(`[data-category-new-input="${editingCategoryId}"]`)
     if (newCategoryInput) newCategoryInput.focus()
   }
+
+  recentlyCompletedId = null
 }
 
 function moveDraggingTodoBefore(targetItem, clientY) {
@@ -747,6 +775,8 @@ async function toggleTodo(id) {
   if (isDayClosed(selectedDate)) return false
   const todo = todos.find((t) => t.id === id)
   if (!todo) return false
+
+  if (!todo.is_complete) recentlyCompletedId = id
 
   const { error } = await supabase
     .from('todos')
