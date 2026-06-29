@@ -13,17 +13,17 @@
           <h1 class="todo-title">weekly to-dos</h1>
           <div class="todo-auth-user" id="todo-auth-user" hidden>
             <span class="todo-auth-email" id="todo-auth-email"></span>
-            <button type="button" class="todo-sign-out-button" id="todo-sign-out-button">
+            <button type="button" class="btn btn--header" id="todo-sign-out-button">
               Sign out
             </button>
           </div>
         </header>
 
         <section class="todo-auth" id="todo-auth-section" hidden>
-          <div class="todo-auth-tabs">
+          <div class="tabs">
             <button
               type="button"
-              class="todo-auth-tab is-active"
+              class="tab is-active"
               id="todo-auth-tab-sign-in"
               data-auth-tab="sign-in"
             >
@@ -31,7 +31,7 @@
             </button>
             <button
               type="button"
-              class="todo-auth-tab"
+              class="tab"
               id="todo-auth-tab-sign-up"
               data-auth-tab="sign-up"
             >
@@ -60,7 +60,7 @@
               required
               aria-label="Password"
             />
-            <button type="submit" class="todo-add-button">Sign in</button>
+            <button type="submit" class="btn btn--primary">Sign in</button>
           </form>
 
           <form class="todo-auth-form" id="todo-sign-up-form" hidden>
@@ -84,24 +84,24 @@
               required
               aria-label="Password"
             />
-            <button type="submit" class="todo-add-button">Create account</button>
+            <button type="submit" class="btn btn--primary">Create account</button>
           </form>
         </section>
 
         <section class="calendar-week" id="calendar-section" aria-label="Calendar">
           <div class="calendar-nav">
-            <button type="button" class="calendar-nav-button" id="calendar-prev" aria-label="Previous">
+            <button type="button" class="btn btn--ghost" id="calendar-prev" aria-label="Previous">
               ←
             </button>
-            <p class="calendar-range" id="calendar-range"></p>
-            <button type="button" class="calendar-nav-button" id="calendar-next" aria-label="Next">
+            <p class="badge calendar-range" id="calendar-range"></p>
+            <button type="button" class="btn btn--ghost" id="calendar-next" aria-label="Next">
               →
             </button>
           </div>
-          <div class="calendar-view-tabs" role="tablist" aria-label="Calendar view">
+          <div class="tabs" role="tablist" aria-label="Calendar view">
             <button
               type="button"
-              class="calendar-view-tab"
+              class="tab"
               id="calendar-view-day"
               data-calendar-view="day"
               role="tab"
@@ -111,7 +111,7 @@
             </button>
             <button
               type="button"
-              class="calendar-view-tab is-active"
+              class="tab is-active"
               id="calendar-view-week"
               data-calendar-view="week"
               role="tab"
@@ -121,7 +121,7 @@
             </button>
             <button
               type="button"
-              class="calendar-view-tab"
+              class="tab"
               id="calendar-view-month"
               data-calendar-view="month"
               role="tab"
@@ -149,7 +149,7 @@
                 <span class="day-closed-badge-reopen">Reopen</span>
               </button>
             </div>
-            <button type="button" class="todo-add-button day-close-trigger" id="close-day-button">
+            <button type="button" class="btn btn--primary day-close-trigger" id="close-day-button">
               Close day
             </button>
           </header>
@@ -173,8 +173,8 @@
               <ul class="close-day-push-list" id="close-day-push-list"></ul>
             </div>
             <div class="close-day-actions">
-              <button type="button" class="todo-add-button" id="close-day-confirm">Close day</button>
-              <button type="button" class="calendar-nav-button" id="close-day-cancel">Cancel</button>
+              <button type="button" class="btn btn--primary" id="close-day-confirm">Close day</button>
+              <button type="button" class="btn btn--ghost" id="close-day-cancel">Cancel</button>
             </div>
           </section>
 
@@ -188,7 +188,7 @@
             autocomplete="off"
             aria-label="New todo"
           />
-          <button type="submit" class="todo-add-button">Add</button>
+          <button type="submit" class="btn btn--primary">Add</button>
         </form>
 
         <p class="todo-error" id="todo-error" hidden></p>

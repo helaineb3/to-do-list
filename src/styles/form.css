@@ -1,0 +1,101 @@
+.todo-form {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.todo-form[hidden] {
+  display: none;
+}
+
+.todo-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-sm) var(--space-md);
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.todo-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.todo-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.todo-error {
+  margin: 0 var(--space-lg) var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
+  color: var(--color-error-text);
+  background-color: var(--color-error-bg);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.todo-error[hidden] {
+  display: none;
+}
+
+.day-panel .todo-error {
+  margin-top: var(--space-sm);
+}
+
+.close-day-reflection {
+  width: 100%;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.close-day-reflection:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.todo-category-new-input,
+.todo-category-input {
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.todo-category-new-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.todo-category-input {
+  width: 100%;
+}
+
+.todo-category-new-input:focus,
+.todo-category-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}

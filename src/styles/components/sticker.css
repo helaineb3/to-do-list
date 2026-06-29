@@ -1,0 +1,95 @@
+.todo-sticker {
+  --sticker-rotate: -8deg;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 var(--space-xs);
+  font-size: 0.65rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    var(--shadow-raised),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.06);
+  transform: rotate(var(--sticker-rotate));
+  user-select: none;
+}
+
+.todo-sticker--new {
+  animation: todo-sticker-pop var(--duration-normal) var(--ease-pop);
+}
+
+.todo-sticker--gold {
+  background: var(--sticker-gold-bg);
+  color: var(--sticker-gold-fg);
+  border-color: var(--sticker-gold-border);
+}
+
+.todo-sticker--red {
+  background: var(--sticker-red-bg);
+  color: var(--sticker-red-fg);
+  border-color: var(--sticker-red-border);
+}
+
+.todo-sticker--green {
+  background: var(--sticker-green-bg);
+  color: var(--sticker-green-fg);
+  border-color: var(--sticker-green-border);
+}
+
+.todo-sticker--blue {
+  background: var(--sticker-blue-bg);
+  color: var(--sticker-blue-fg);
+  border-color: var(--sticker-blue-border);
+}
+
+.todo-sticker--purple {
+  background: var(--sticker-purple-bg);
+  color: var(--sticker-purple-fg);
+  border-color: var(--sticker-purple-border);
+}
+
+.todo-sticker--pink {
+  background: var(--sticker-pink-bg);
+  color: var(--sticker-pink-fg);
+  border-color: var(--sticker-pink-border);
+}
+
+.todo-sticker--yellow {
+  background: var(--sticker-yellow-bg);
+  color: var(--sticker-yellow-fg);
+  border-color: var(--sticker-yellow-border);
+}
+
+.todo-sticker--gold,
+.todo-sticker--green,
+.todo-sticker--blue,
+.todo-sticker--purple,
+.todo-sticker--pink {
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+@keyframes todo-sticker-pop {
+  0% {
+    transform: scale(0.2) rotate(calc(var(--sticker-rotate) - 28deg));
+    opacity: 0;
+  }
+
+  65% {
+    transform: scale(1.12) rotate(calc(var(--sticker-rotate) + 6deg));
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(var(--sticker-rotate));
+    opacity: 1;
+  }
+}

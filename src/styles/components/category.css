@@ -1,0 +1,133 @@
+.todo-item-category,
+.todo-category-option {
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.todo-item-category {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-raised);
+}
+
+.todo-item-category[data-variant='work'],
+.todo-category-option[data-variant='work'] {
+  color: var(--cat-work-fg);
+  background-color: var(--cat-work-bg);
+  border-color: var(--cat-work-border);
+}
+
+.todo-item-category[data-variant='personal'],
+.todo-category-option[data-variant='personal'] {
+  color: var(--cat-personal-fg);
+  background-color: var(--cat-personal-bg);
+  border-color: var(--cat-personal-border);
+}
+
+.todo-item-category[data-variant='shopping'],
+.todo-category-option[data-variant='shopping'] {
+  color: var(--cat-shopping-fg);
+  background-color: var(--cat-shopping-bg);
+  border-color: var(--cat-shopping-border);
+}
+
+.todo-item-category[data-variant='health'],
+.todo-category-option[data-variant='health'] {
+  color: var(--cat-health-fg);
+  background-color: var(--cat-health-bg);
+  border-color: var(--cat-health-border);
+}
+
+.todo-item-category[data-variant='custom'],
+.todo-category-option[data-variant='custom'] {
+  color: var(--cat-custom-fg);
+  background-color: var(--cat-custom-bg);
+  border-color: var(--cat-custom-border);
+}
+
+.todo-item.is-complete .todo-item-category {
+  opacity: 0.8;
+}
+
+.todo-category-option {
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
+}
+
+.todo-category-option:not(.is-active):hover {
+  filter: brightness(0.97);
+}
+
+.todo-category-option.is-active {
+  font-weight: var(--font-weight-bold);
+}
+
+.todo-category-option.is-active::before {
+  content: '✓ ';
+}
+
+.todo-category-option.is-active[data-variant='work'] {
+  color: var(--cat-work-active-fg);
+  background-color: var(--cat-work-active-bg);
+  border-color: var(--cat-work-active-border);
+  box-shadow:
+    0 0 0 2px var(--cat-work-ring),
+    3px 3px 0 var(--color-shadow);
+}
+
+.todo-category-option.is-active[data-variant='personal'] {
+  color: var(--cat-personal-active-fg);
+  background-color: var(--cat-personal-active-bg);
+  border-color: var(--cat-personal-active-border);
+  box-shadow:
+    0 0 0 2px var(--cat-personal-ring),
+    3px 3px 0 var(--color-shadow);
+}
+
+.todo-category-option.is-active[data-variant='shopping'] {
+  color: var(--cat-shopping-active-fg);
+  background-color: var(--cat-shopping-active-bg);
+  border-color: var(--cat-shopping-active-border);
+  box-shadow:
+    0 0 0 2px var(--cat-shopping-ring),
+    3px 3px 0 var(--color-shadow);
+}
+
+.todo-category-option.is-active[data-variant='health'] {
+  color: var(--cat-health-active-fg);
+  background-color: var(--cat-health-active-bg);
+  border-color: var(--cat-health-active-border);
+  box-shadow:
+    0 0 0 2px var(--cat-health-ring),
+    3px 3px 0 var(--color-shadow);
+}
+
+.todo-category-option.is-active[data-variant='custom'] {
+  color: var(--cat-custom-active-fg);
+  background-color: var(--cat-custom-active-bg);
+  border-color: var(--cat-custom-active-border);
+  box-shadow:
+    0 0 0 2px var(--cat-custom-ring),
+    3px 3px 0 var(--color-shadow);
+}
+
+.todo-category-option:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
