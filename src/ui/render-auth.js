@@ -1,6 +1,7 @@
 import { state } from '../app/state.js'
 import { ui } from '../lib/dom.js'
 import { isAnonymousUser } from '../lib/helpers.js'
+import { clearError } from '../lib/errors.js'
 
 export function updateAuthUI() {
   const isEmailUser = state.user && !isAnonymousUser(state.user)
@@ -14,6 +15,7 @@ export function updateAuthUI() {
 }
 
 export function showAuthTab(tab) {
+  clearError()
   const isSignIn = tab === 'sign-in'
   ui.signInTab.classList.toggle('is-active', isSignIn)
   ui.signUpTab.classList.toggle('is-active', !isSignIn)

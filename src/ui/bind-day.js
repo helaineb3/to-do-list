@@ -1,5 +1,6 @@
 import { ui } from '../lib/dom.js'
 import { confirmCloseDay, reopenDay } from '../api/reflections.js'
+import { safeHandler } from '../lib/errors.js'
 import {
   closeCloseDayPanel,
   openCloseDayPanel,
@@ -14,11 +15,7 @@ export function bindDayEvents() {
     closeCloseDayPanel()
   })
 
-  ui.closeDayConfirmBtn.addEventListener('click', () => {
-    confirmCloseDay()
-  })
+  ui.closeDayConfirmBtn.addEventListener('click', safeHandler('close day', confirmCloseDay))
 
-  ui.dayClosedBadgeEl.addEventListener('click', () => {
-    reopenDay()
-  })
+  ui.dayClosedBadgeEl.addEventListener('click', safeHandler('reopen day', reopenDay))
 }

@@ -1,0 +1,17 @@
+.app-error {
+  margin: 0;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--tracking-normal);
+  text-transform: uppercase;
+  color: var(--color-error-text);
+  background-color: var(--color-error-bg);
+  border-bottom: var(--border-width) solid var(--color-error-border);
+  box-shadow: inset 0 calc(-1 * var(--border-width-thin)) 0 rgba(0, 0, 0, 0.15);
+}
+
+.app-error[hidden] {
+  display: none;
+}

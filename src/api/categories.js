@@ -1,17 +1,19 @@
 import { state } from '../app/state.js'
-import { showError } from '../lib/errors.js'
+import { reportError, warnUser } from '../lib/errors.js'
+import { requireOpenDay, requireUser } from '../lib/guards.js'
 import { refreshAppData } from '../app/refresh.js'
 import { renderTodos } from '../ui/render-todos.js'
 import * as todosRepo from '../repositories/todos.js'
 import * as categoriesRepo from '../repositories/categories.js'
 
 export async function saveCategory(id, category) {
+  if (!requireUser() || !requireOpenDay()) return false
+
   const trimmed = category.trim()
   const { error } = await todosRepo.updateTodoCategory(id, trimmed || null)
 
   if (error) {
-    console.error('Failed to update category:', error.message)
-    showError(`Could not save category: ${error.message}`)
+    reportError('save category', error)
     return false
   }
 
@@ -21,8 +23,13 @@ export async function saveCategory(id, category) {
 }
 
 export async function addUserCategory(name, assignToTodoId = null) {
+  if (!requireUser()) return false
+
   const trimmed = name.trim()
-  if (!trimmed) return false
+  if (!trimmed) {
+    warnUser('Enter a category name.')
+    return false
+  }
 
   const existing = state.userCategories.find(
     (category) => category.name.toLowerCase() === trimmed.toLowerCase()
@@ -40,8 +47,7 @@ export async function addUserCategory(name, assignToTodoId = null) {
   )
 
   if (error) {
-    console.error('Failed to add category:', error.message)
-    showError(`Could not add category: ${error.message}`)
+    reportError('add category', error)
     return false
   }
 
@@ -54,8 +60,13 @@ export async function addUserCategory(name, assignToTodoId = null) {
 }
 
 export async function deleteUserCategory(categoryId) {
+  if (!requireUser()) return false
+
   const category = state.userCategories.find((entry) => entry.id === categoryId)
-  if (!category) return false
+  if (!category) {
+    reportError('delete category', 'Category not found')
+    return false
+  }
 
   const { error: clearTodosError } = await todosRepo.clearTodoCategoryForUser(
     state.user.id,
@@ -63,16 +74,14 @@ export async function deleteUserCategory(categoryId) {
   )
 
   if (clearTodosError) {
-    console.error('Failed to clear category from todos:', clearTodosError.message)
-    showError(`Could not clear category from todos: ${clearTodosError.message}`)
+    reportError('clear category from todos', clearTodosError)
     return false
   }
 
   const { error } = await categoriesRepo.deleteCategoryById(categoryId)
 
   if (error) {
-    console.error('Failed to delete category:', error.message)
-    showError(`Could not delete category: ${error.message}`)
+    reportError('delete category', error)
     return false
   }
 

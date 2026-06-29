@@ -1,12 +1,13 @@
 import { state } from '../app/state.js'
-import { isDayClosed, nextSortOrderForDay } from '../lib/helpers.js'
-import { showError } from '../lib/errors.js'
+import { nextSortOrderForDay } from '../lib/helpers.js'
+import { reportError } from '../lib/errors.js'
+import { requireOpenDay, requireUser } from '../lib/guards.js'
 import { refreshAppData } from '../app/refresh.js'
 import { ui } from '../lib/dom.js'
 import * as todosRepo from '../repositories/todos.js'
 
 export async function addTodo(text) {
-  if (isDayClosed(state.selectedDate)) return false
+  if (!requireUser() || !requireOpenDay()) return false
 
   const { error } = await todosRepo.insertTodo({
     userId: state.user.id,
@@ -16,8 +17,7 @@ export async function addTodo(text) {
   })
 
   if (error) {
-    console.error('Failed to add todo:', error.message)
-    showError(`Could not add todo: ${error.message}`)
+    reportError('add todo', error)
     return false
   }
 
@@ -25,17 +25,20 @@ export async function addTodo(text) {
 }
 
 export async function toggleTodo(id) {
-  if (isDayClosed(state.selectedDate)) return false
+  if (!requireUser() || !requireOpenDay()) return false
+
   const todo = state.todos.find((t) => t.id === id)
-  if (!todo) return false
+  if (!todo) {
+    reportError('update todo', 'Todo not found')
+    return false
+  }
 
   if (!todo.is_complete) state.recentlyCompletedId = id
 
   const { error } = await todosRepo.updateTodoComplete(id, !todo.is_complete)
 
   if (error) {
-    console.error('Failed to update todo:', error.message)
-    showError(`Could not update todo: ${error.message}`)
+    reportError('update todo', error)
     return false
   }
 
@@ -43,13 +46,12 @@ export async function toggleTodo(id) {
 }
 
 export async function deleteTodo(id) {
-  if (isDayClosed(state.selectedDate)) return false
+  if (!requireUser() || !requireOpenDay()) return false
 
   const { error } = await todosRepo.deleteTodoById(id)
 
   if (error) {
-    console.error('Failed to delete todo:', error.message)
-    showError(`Could not delete todo: ${error.message}`)
+    reportError('delete todo', error)
     return false
   }
 
@@ -57,6 +59,8 @@ export async function deleteTodo(id) {
 }
 
 export async function persistTodoOrderFromDom() {
+  if (!requireUser() || !requireOpenDay()) return false
+
   const orderedIds = [...ui.list.querySelectorAll('.todo-item')].map((item) => Number(item.dataset.id))
 
   orderedIds.forEach((id, index) => {
@@ -70,8 +74,7 @@ export async function persistTodoOrderFromDom() {
 
   const failed = results.find((result) => result.error)
   if (failed?.error) {
-    console.error('Failed to reorder todos:', failed.error.message)
-    showError(`Could not reorder todos: ${failed.error.message}`)
+    reportError('reorder todos', failed.error)
     await refreshAppData()
     return false
   }

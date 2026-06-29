@@ -5,6 +5,7 @@
 @import './components/badge.css';
 @import './components/category.css';
 @import './components/sticker.css';
+@import './components/error.css';
 @import './layout.css';
 @import './auth.css';
 @import './calendar.css';

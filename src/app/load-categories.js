@@ -1,14 +1,13 @@
 import { state } from './state.js'
 import { STARTER_CATEGORIES } from '../constants/categories.js'
-import { showError } from '../lib/errors.js'
+import { reportError } from '../lib/errors.js'
 import * as categoriesRepo from '../repositories/categories.js'
 
 export async function loadUserCategories() {
   const { data, error } = await categoriesRepo.fetchUserCategories(state.user.id)
 
   if (error) {
-    console.error('Failed to load categories:', error.message)
-    showError(`Could not load categories: ${error.message}`)
+    reportError('load categories', error)
     return false
   }
 
@@ -21,8 +20,7 @@ export async function loadUserCategories() {
     )
 
     if (seedError) {
-      console.error('Failed to seed categories:', seedError.message)
-      showError(`Could not create categories: ${seedError.message}`)
+      reportError('create categories', seedError)
       return false
     }
 
@@ -48,7 +46,7 @@ export async function syncCategoriesFromTodos() {
   )
 
   if (error) {
-    console.error('Failed to sync categories from todos:', error.message)
+    reportError('sync categories', error)
     return false
   }
 

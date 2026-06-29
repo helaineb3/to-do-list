@@ -32,25 +32,6 @@
   box-shadow: var(--shadow-focus-ring);
 }
 
-.todo-error {
-  margin: 0 var(--space-lg) var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-body);
-  color: var(--color-error-text);
-  background-color: var(--color-error-bg);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-}
-
-.todo-error[hidden] {
-  display: none;
-}
-
-.day-panel .todo-error {
-  margin-top: var(--space-sm);
-}
-
 .close-day-reflection {
   width: 100%;
   margin-bottom: var(--space-md);

@@ -1,20 +1,29 @@
 import { state } from '../app/state.js'
 import { isAnonymousUser } from '../lib/helpers.js'
-import { showError } from '../lib/errors.js'
+import { reportError, warnUser, showAuthError, clearAuthError } from '../lib/errors.js'
+import { getSignInErrorMessage, getSignUpErrorMessage } from '../lib/auth-errors.js'
 import { refreshAppData } from '../app/refresh.js'
 import { updateAuthUI } from '../ui/render-auth.js'
 import { ensureSession } from './session.js'
 import * as authRepo from '../repositories/auth.js'
 
 export async function signInWithEmail(email, password) {
+  clearAuthError()
+
+  if (!email || !password) {
+    warnUser('Enter your email and password.')
+    return false
+  }
+
   const { data, error } = await authRepo.signInWithPassword(email, password)
 
   if (error) {
     console.error('Failed to sign in:', error.message)
-    showError(`Could not sign in: ${error.message}`)
+    showAuthError(getSignInErrorMessage(error))
     return false
   }
 
+  clearAuthError()
   state.user = data.user
   updateAuthUI()
   await refreshAppData()
@@ -22,12 +31,19 @@ export async function signInWithEmail(email, password) {
 }
 
 export async function signUpWithEmail(email, password) {
+  clearAuthError()
+
+  if (!email || !password) {
+    warnUser('Enter your email and password.')
+    return false
+  }
+
   if (isAnonymousUser(state.user)) {
     const { data, error } = await authRepo.updateUser({ email, password })
 
     if (error) {
       console.error('Failed to create account:', error.message)
-      showError(`Could not create account: ${error.message}`)
+      showAuthError(getSignUpErrorMessage(error))
       return false
     }
 
@@ -36,10 +52,11 @@ export async function signUpWithEmail(email, password) {
     await refreshAppData()
 
     if (isAnonymousUser(state.user)) {
-      showError('Check your email to confirm your account.')
+      warnUser('Check your email to confirm your account.')
       return false
     }
 
+    clearAuthError()
     return true
   }
 
@@ -47,18 +64,19 @@ export async function signUpWithEmail(email, password) {
 
   if (error) {
     console.error('Failed to sign up:', error.message)
-    showError(`Could not create account: ${error.message}`)
+    showAuthError(getSignUpErrorMessage(error))
     return false
   }
 
   if (data.session) {
+    clearAuthError()
     state.user = data.user
     updateAuthUI()
     await refreshAppData()
     return true
   }
 
-  showError('Check your email to confirm your account, then sign in.')
+  warnUser('Check your email to confirm your account, then sign in.')
   return false
 }
 
@@ -66,8 +84,7 @@ export async function signOut() {
   const { error } = await authRepo.signOut()
 
   if (error) {
-    console.error('Failed to sign out:', error.message)
-    showError(`Could not sign out: ${error.message}`)
+    reportError('sign out', error)
     return false
   }
 

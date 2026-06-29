@@ -1,8 +1,17 @@
 import { state } from '../app/state.js'
 import { addDays, addMonths, startOfWeek } from '../lib/dates.js'
 import { getCalendarRange } from '../lib/helpers.js'
+import { reportError } from '../lib/errors.js'
 import { refreshAppData } from '../app/refresh.js'
 import { renderAll } from '../ui/render-all.js'
+
+async function reloadCalendarData() {
+  try {
+    await refreshAppData()
+  } catch (error) {
+    reportError('load calendar data', error)
+  }
+}
 
 export function selectDate(dateStr) {
   state.selectedDate = dateStr
@@ -12,7 +21,7 @@ export function selectDate(dateStr) {
 
   const { start, end } = getCalendarRange()
   if (dateStr < start || dateStr > end) {
-    refreshAppData()
+    reloadCalendarData()
   } else {
     renderAll()
   }
@@ -31,7 +40,7 @@ export function navigateCalendar(direction) {
 
   state.showCloseDayPanel = false
   state.editingCategoryId = null
-  refreshAppData()
+  reloadCalendarData()
 }
 
 export function setCalendarViewMode(mode) {
@@ -41,5 +50,5 @@ export function setCalendarViewMode(mode) {
   state.weekStart = startOfWeek(state.selectedDate)
   state.showCloseDayPanel = false
   state.editingCategoryId = null
-  refreshAppData()
+  reloadCalendarData()
 }

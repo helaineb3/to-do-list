@@ -12,6 +12,7 @@ import {
   deleteUserCategory,
   saveCategory,
 } from '../api/categories.js'
+import { safeHandler } from '../lib/errors.js'
 import {
   closeCategoryPopover,
   startEditingCategory,
@@ -32,18 +33,21 @@ function moveDraggingTodoBefore(targetItem, clientY) {
 }
 
 export function bindTodoEvents() {
-  ui.form.addEventListener('submit', async (event) => {
-    event.preventDefault()
-    const text = ui.input.value.trim()
-    if (!text) return
+  ui.form.addEventListener(
+    'submit',
+    safeHandler('add todo', async (event) => {
+      event.preventDefault()
+      const text = ui.input.value.trim()
+      if (!text) return
 
-    const success = await addTodo(text)
-    if (!success) return
+      const success = await addTodo(text)
+      if (!success) return
 
-    ui.input.value = ''
-    await refreshAppData()
-    ui.input.focus()
-  })
+      ui.input.value = ''
+      await refreshAppData()
+      ui.input.focus()
+    })
+  )
 
   ui.list.addEventListener('dragstart', (event) => {
     const dragZone = event.target.closest('.todo-item-drag-zone')
@@ -75,68 +79,77 @@ export function bindTodoEvents() {
     moveDraggingTodoBefore(targetItem, event.clientY)
   })
 
-  ui.list.addEventListener('drop', async (event) => {
-    if (!ui.list.querySelector('.todo-item.is-dragging')) return
+  ui.list.addEventListener(
+    'drop',
+    safeHandler('reorder todos', async (event) => {
+      if (!ui.list.querySelector('.todo-item.is-dragging')) return
 
-    event.preventDefault()
-    ui.list.querySelectorAll('.todo-item').forEach((el) => el.classList.remove('is-drag-over'))
-    await persistTodoOrderFromDom()
-  })
+      event.preventDefault()
+      ui.list.querySelectorAll('.todo-item').forEach((el) => el.classList.remove('is-drag-over'))
+      await persistTodoOrderFromDom()
+    })
+  )
 
-  ui.list.addEventListener('click', async (event) => {
-    if (event.target.closest('.todo-category-popover')) {
+  ui.list.addEventListener(
+    'click',
+    safeHandler('update todo', async (event) => {
+      if (event.target.closest('.todo-category-popover')) {
+        const item = event.target.closest('.todo-item')
+        const id = Number(item.dataset.id)
+
+        if (event.target.closest('.todo-category-delete')) {
+          const deleteButton = event.target.closest('.todo-category-delete')
+          await deleteUserCategory(Number(deleteButton.dataset.categoryId))
+          return
+        }
+
+        if (event.target.closest('.todo-category-add-button')) {
+          const popover = event.target.closest('.todo-category-popover')
+          const newInput = popover.querySelector('.todo-category-new-input')
+          await addUserCategory(newInput.value, id)
+          newInput.value = ''
+          return
+        }
+
+        if (event.target.closest('.todo-category-option')) {
+          const option = event.target.closest('.todo-category-option')
+          const value = option.classList.contains('is-active') ? '' : option.dataset.categoryValue
+          await saveCategory(id, value)
+        }
+        return
+      }
+
       const item = event.target.closest('.todo-item')
+      if (!item) return
+
       const id = Number(item.dataset.id)
 
-      if (event.target.closest('.todo-category-delete')) {
-        const deleteButton = event.target.closest('.todo-category-delete')
-        await deleteUserCategory(Number(deleteButton.dataset.categoryId))
-        return
+      if (event.target.closest('.todo-complete-button')) {
+        const success = await toggleTodo(id)
+        if (success) await refreshAppData()
+      } else if (event.target.closest('.todo-category-button')) {
+        startEditingCategory(id)
+      } else if (event.target.closest('.todo-delete-button')) {
+        const success = await deleteTodo(id)
+        if (success) await refreshAppData()
       }
+    })
+  )
 
-      if (event.target.closest('.todo-category-add-button')) {
-        const popover = event.target.closest('.todo-category-popover')
-        const newInput = popover.querySelector('.todo-category-new-input')
-        await addUserCategory(newInput.value, id)
-        newInput.value = ''
-        return
-      }
+  ui.list.addEventListener(
+    'keydown',
+    safeHandler('add category', async (event) => {
+      if (event.key !== 'Enter') return
 
-      if (event.target.closest('.todo-category-option')) {
-        const option = event.target.closest('.todo-category-option')
-        const value = option.classList.contains('is-active') ? '' : option.dataset.categoryValue
-        await saveCategory(id, value)
-      }
-      return
-    }
+      const newCategoryInput = event.target.closest('[data-category-new-input]')
+      if (!newCategoryInput) return
 
-    const item = event.target.closest('.todo-item')
-    if (!item) return
-
-    const id = Number(item.dataset.id)
-
-    if (event.target.closest('.todo-complete-button')) {
-      const success = await toggleTodo(id)
-      if (success) await refreshAppData()
-    } else if (event.target.closest('.todo-category-button')) {
-      startEditingCategory(id)
-    } else if (event.target.closest('.todo-delete-button')) {
-      const success = await deleteTodo(id)
-      if (success) await refreshAppData()
-    }
-  })
-
-  ui.list.addEventListener('keydown', async (event) => {
-    if (event.key !== 'Enter') return
-
-    const newCategoryInput = event.target.closest('[data-category-new-input]')
-    if (!newCategoryInput) return
-
-    event.preventDefault()
-    const id = Number(newCategoryInput.dataset.categoryNewInput)
-    await addUserCategory(newCategoryInput.value, id)
-    newCategoryInput.value = ''
-  })
+      event.preventDefault()
+      const id = Number(newCategoryInput.dataset.categoryNewInput)
+      await addUserCategory(newCategoryInput.value, id)
+      newCategoryInput.value = ''
+    })
+  )
 
   document.addEventListener('click', (event) => {
     if (!state.editingCategoryId) return
