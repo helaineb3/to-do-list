@@ -186,6 +186,27 @@ async function signInWithEmail(email, password) {
 }
 
 async function signUpWithEmail(email, password) {
+  if (isAnonymousUser(user)) {
+    const { data, error } = await supabase.auth.updateUser({ email, password })
+
+    if (error) {
+      console.error('Failed to create account:', error.message)
+      showError(`Could not create account: ${error.message}`)
+      return false
+    }
+
+    user = data.user
+    updateAuthUI()
+    await loadTodos()
+
+    if (isAnonymousUser(user)) {
+      showError('Check your email to confirm your account.')
+      return false
+    }
+
+    return true
+  }
+
   const { data, error } = await supabase.auth.signUp({ email, password })
 
   if (error) {
