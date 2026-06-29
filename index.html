@@ -11,7 +11,82 @@
       <main class="todo-app">
         <header class="todo-header">
           <h1 class="todo-title">Todos</h1>
+          <div class="todo-auth-user" id="todo-auth-user" hidden>
+            <span class="todo-auth-email" id="todo-auth-email"></span>
+            <button type="button" class="todo-sign-out-button" id="todo-sign-out-button">
+              Sign out
+            </button>
+          </div>
         </header>
+
+        <section class="todo-auth" id="todo-auth-section" hidden>
+          <div class="todo-auth-tabs">
+            <button
+              type="button"
+              class="todo-auth-tab is-active"
+              id="todo-auth-tab-sign-in"
+              data-auth-tab="sign-in"
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              class="todo-auth-tab"
+              id="todo-auth-tab-sign-up"
+              data-auth-tab="sign-up"
+            >
+              Create account
+            </button>
+          </div>
+
+          <form class="todo-auth-form" id="todo-sign-in-form">
+            <input
+              type="email"
+              id="todo-sign-in-email"
+              class="todo-input"
+              name="email"
+              placeholder="Email"
+              autocomplete="email"
+              required
+              aria-label="Email"
+            />
+            <input
+              type="password"
+              id="todo-sign-in-password"
+              class="todo-input"
+              name="password"
+              placeholder="Password"
+              autocomplete="current-password"
+              required
+              aria-label="Password"
+            />
+            <button type="submit" class="todo-add-button">Sign in</button>
+          </form>
+
+          <form class="todo-auth-form" id="todo-sign-up-form" hidden>
+            <input
+              type="email"
+              id="todo-sign-up-email"
+              class="todo-input"
+              name="email"
+              placeholder="Email"
+              autocomplete="email"
+              required
+              aria-label="Email"
+            />
+            <input
+              type="password"
+              id="todo-sign-up-password"
+              class="todo-input"
+              name="password"
+              placeholder="Password"
+              autocomplete="new-password"
+              required
+              aria-label="Password"
+            />
+            <button type="submit" class="todo-add-button">Create account</button>
+          </form>
+        </section>
 
         <form class="todo-form" id="todo-form">
           <input

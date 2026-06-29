@@ -29,6 +29,7 @@
   --color-bg: var(--color-gray-100);
   --color-bg-paper: var(--color-white);
   --color-surface: var(--color-white);
+  --color-surface-hover: var(--color-gray-200);
   --color-border: var(--color-gray-300);
   --color-border-strong: var(--color-gray-500);
   --color-grid: var(--color-blue-200);
@@ -37,6 +38,12 @@
   --color-text-inverse: var(--color-gray-100);
   --color-primary: var(--color-blue-700);
   --color-primary-hover: var(--color-blue-800);
+  --color-header-bg: var(--color-blue-900);
+  --color-header-border: var(--color-blue-800);
+  --color-header-text-muted: var(--color-blue-200);
+  --color-shadow: var(--color-gray-300);
+  --color-error-bg: var(--color-gray-800);
+  --color-error-text: var(--color-gray-100);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -77,19 +84,28 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-accent-muted: rgba(56, 189, 248, 0.18);
+    color-scheme: dark;
 
-    --color-bg: var(--color-gray-900);
-    --color-bg-paper: var(--color-gray-800);
-    --color-surface: var(--color-gray-800);
-    --color-border: var(--color-gray-700);
-    --color-border-strong: var(--color-gray-500);
-    --color-grid: var(--color-blue-900);
-    --color-text: var(--color-gray-200);
-    --color-text-muted: var(--color-gray-400);
-    --color-text-inverse: var(--color-gray-900);
-    --color-primary: var(--color-blue-400);
-    --color-primary-hover: var(--color-blue-300);
+    --color-accent-muted: rgba(56, 189, 248, 0.14);
+
+    --color-bg: #0a0e14;
+    --color-bg-paper: #141c28;
+    --color-surface: #1a2433;
+    --color-surface-hover: #243044;
+    --color-border: #2d3a4f;
+    --color-border-strong: #4a5d78;
+    --color-grid: rgba(56, 189, 248, 0.07);
+    --color-text: #e2e8f0;
+    --color-text-muted: #8b9cb3;
+    --color-text-inverse: #f1f5f9;
+    --color-primary: #1e4d7b;
+    --color-primary-hover: #2563eb;
+    --color-header-bg: #0c2744;
+    --color-header-border: #1e3a5f;
+    --color-header-text-muted: #93c5fd;
+    --color-shadow: #060a10;
+    --color-error-bg: #1e293b;
+    --color-error-text: #fca5a5;
   }
 }
 
@@ -122,22 +138,108 @@ body {
   border: 2px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   box-shadow:
-    4px 4px 0 var(--color-gray-300),
+    4px 4px 0 var(--color-shadow),
     4px 4px 0 2px var(--color-border-strong);
-}
-
-@media (prefers-color-scheme: dark) {
-  .todo-app {
-    box-shadow:
-      4px 4px 0 var(--color-gray-900),
-      4px 4px 0 2px var(--color-border-strong);
-  }
 }
 
 .todo-header {
   padding: var(--space-lg) var(--space-lg) var(--space-md);
   border-bottom: 2px solid var(--color-border-strong);
-  background-color: var(--color-blue-900);
+  background-color: var(--color-header-bg);
+}
+
+.todo-auth-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-header-border);
+}
+
+.todo-auth-user[hidden] {
+  display: none;
+}
+
+.todo-auth-email {
+  font-size: var(--font-size-sm);
+  color: var(--color-header-text-muted);
+}
+
+.todo-sign-out-button {
+  flex-shrink: 0;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-inverse);
+  background-color: transparent;
+  border: 2px solid var(--color-header-text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.todo-sign-out-button:hover {
+  background-color: var(--color-header-border);
+}
+
+.todo-sign-out-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.todo-auth {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.todo-auth[hidden] {
+  display: none;
+}
+
+.todo-auth-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.todo-auth-tab {
+  flex: 1;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.todo-auth-tab.is-active {
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-color: var(--color-border-strong);
+}
+
+.todo-auth-tab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.todo-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.todo-auth-form[hidden] {
+  display: none;
 }
 
 .todo-title {
@@ -210,8 +312,8 @@ body {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-body);
-  color: var(--color-text-inverse);
-  background-color: var(--color-gray-800);
+  color: var(--color-error-text);
+  background-color: var(--color-error-bg);
   border: 2px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
 }
@@ -302,13 +404,7 @@ body {
 .todo-delete-button:hover {
   color: var(--color-text);
   border-color: var(--color-border-strong);
-  background-color: var(--color-gray-200);
-}
-
-@media (prefers-color-scheme: dark) {
-  .todo-delete-button:hover {
-    background-color: var(--color-gray-700);
-  }
+  background-color: var(--color-surface-hover);
 }
 
 .todo-delete-button:focus-visible {
