@@ -372,6 +372,14 @@ body {
   border-color: var(--color-primary);
 }
 
+.todo-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
 .todo-item-text {
   flex: 1;
   min-width: 0;
@@ -380,18 +388,231 @@ body {
   color: var(--color-text);
 }
 
-.todo-item.is-complete .todo-item-text {
-  color: var(--color-text-muted);
-  text-decoration: line-through;
+.todo-item-category {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-tight);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
 }
 
-.todo-delete-button {
+.todo-item-category--work {
+  color: #1e4d7b;
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.todo-item-category--personal {
+  color: #334155;
+  background-color: #e2e8f0;
+  border-color: #64748b;
+}
+
+.todo-item-category--shopping {
+  color: #0c4a6e;
+  background-color: #e0f2fe;
+  border-color: #38bdf8;
+}
+
+.todo-item-category--health {
+  color: #134e4a;
+  background-color: #ccfbf1;
+  border-color: #2dd4bf;
+}
+
+.todo-item-category--custom {
+  color: var(--color-gray-700);
+  background-color: var(--color-gray-200);
+  border-color: var(--color-gray-500);
+}
+
+@media (prefers-color-scheme: dark) {
+  .todo-item-category--work {
+    color: #bfdbfe;
+    background-color: #1e3a5f;
+    border-color: #60a5fa;
+  }
+
+  .todo-item-category--personal {
+    color: #cbd5e1;
+    background-color: #334155;
+    border-color: #94a3b8;
+  }
+
+  .todo-item-category--shopping {
+    color: #bae6fd;
+    background-color: #0c4a6e;
+    border-color: #38bdf8;
+  }
+
+  .todo-item-category--health {
+    color: #99f6e4;
+    background-color: #134e4a;
+    border-color: #2dd4bf;
+  }
+
+  .todo-item-category--custom {
+    color: var(--color-gray-300);
+    background-color: var(--color-gray-700);
+    border-color: var(--color-gray-500);
+  }
+}
+
+.todo-item.is-complete .todo-item-category {
+  opacity: 0.75;
+}
+
+.todo-item-actions {
+  display: flex;
   flex-shrink: 0;
+  gap: var(--space-xs);
+}
+
+.todo-category-anchor {
+  position: relative;
+}
+
+.todo-category-popover {
+  position: absolute;
+  bottom: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 20;
+  width: 11rem;
+  padding: var(--space-sm);
+  background-color: var(--color-bg-paper);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    3px 3px 0 var(--color-shadow),
+    3px 3px 0 1px var(--color-border-strong);
+}
+
+.todo-category-popover-label {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.todo-category-options {
+  display: grid;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.todo-category-option {
   padding: var(--space-xs) var(--space-sm);
   font-family: inherit;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  line-height: var(--line-height-tight);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.todo-category-option.todo-item-category--work {
+  color: #1e4d7b;
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.todo-category-option.todo-item-category--personal {
+  color: #334155;
+  background-color: #e2e8f0;
+  border-color: #64748b;
+}
+
+.todo-category-option.todo-item-category--shopping {
+  color: #0c4a6e;
+  background-color: #e0f2fe;
+  border-color: #38bdf8;
+}
+
+.todo-category-option.todo-item-category--health {
+  color: #134e4a;
+  background-color: #ccfbf1;
+  border-color: #2dd4bf;
+}
+
+.todo-category-option.todo-item-category--custom {
+  color: var(--color-gray-700);
+  background-color: var(--color-gray-200);
+  border-color: var(--color-gray-500);
+}
+
+.todo-category-option:hover {
+  filter: brightness(0.95);
+}
+
+.todo-category-option.is-active.todo-item-category--work {
+  color: #bfdbfe;
+  background-color: #1e4d7b;
+  border-color: #3b82f6;
+}
+
+.todo-category-option.is-active.todo-item-category--personal {
+  color: #e2e8f0;
+  background-color: #475569;
+  border-color: #94a3b8;
+}
+
+.todo-category-option.is-active.todo-item-category--shopping {
+  color: #e0f2fe;
+  background-color: #0369a1;
+  border-color: #38bdf8;
+}
+
+.todo-category-option.is-active.todo-item-category--health {
+  color: #ccfbf1;
+  background-color: #0f766e;
+  border-color: #2dd4bf;
+}
+
+.todo-category-option.is-active.todo-item-category--custom {
+  color: var(--color-text-inverse);
+  background-color: var(--color-primary);
+  border-color: var(--color-border-strong);
+}
+
+.todo-category-option:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.todo-category-input {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-body);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.todo-category-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.todo-category-remove {
+  margin-top: var(--space-sm);
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -401,13 +622,54 @@ body {
   cursor: pointer;
 }
 
-.todo-delete-button:hover {
+.todo-category-remove:hover {
+  color: var(--color-error-text);
+  border-color: var(--color-border-strong);
+  background-color: var(--color-error-bg);
+}
+
+.todo-category-remove:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.todo-item.is-complete .todo-item-text {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.todo-icon-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  color: var(--color-text-muted);
+  background-color: transparent;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.todo-action-icon {
+  display: block;
+}
+
+.todo-icon-button:hover {
   color: var(--color-text);
   border-color: var(--color-border-strong);
   background-color: var(--color-surface-hover);
 }
 
-.todo-delete-button:focus-visible {
+.todo-category-button:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background-color: var(--color-accent-muted);
+}
+
+.todo-icon-button:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }

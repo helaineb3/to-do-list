@@ -3,6 +3,7 @@ import { supabase } from './supabase.js'
 
 let todos = []
 let user = null
+let editingCategoryId = null
 
 const form = document.getElementById('todo-form')
 const input = document.getElementById('todo-input')
@@ -16,6 +17,41 @@ const signInForm = document.getElementById('todo-sign-in-form')
 const signUpForm = document.getElementById('todo-sign-up-form')
 const signInTab = document.getElementById('todo-auth-tab-sign-in')
 const signUpTab = document.getElementById('todo-auth-tab-sign-up')
+
+const DELETE_ICON = `
+  <svg class="todo-action-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M9 10v7" />
+    <path d="M15 10v7" />
+    <path d="M5 6l1 14h12l1-14" />
+  </svg>
+`
+
+const CATEGORY_ICON = `
+  <svg class="todo-action-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+    <path d="M4 7h7l2 2h9v10H4z" />
+    <path d="M4 7V5h6l2 2" />
+  </svg>
+`
+
+const STARTER_CATEGORIES = ['Work', 'Personal', 'Shopping', 'Health']
+
+const CATEGORY_CLASS_MAP = {
+  work: 'todo-item-category--work',
+  personal: 'todo-item-category--personal',
+  shopping: 'todo-item-category--shopping',
+  health: 'todo-item-category--health',
+}
+
+function getCategoryClass(category) {
+  const slug = category.trim().toLowerCase()
+  return CATEGORY_CLASS_MAP[slug] || 'todo-item-category--custom'
+}
+
+function renderCategoryBadge(category) {
+  return `<span class="todo-item-category ${getCategoryClass(category)}">${escapeHtml(category)}</span>`
+}
 
 function showError(message) {
   errorEl.textContent = message
@@ -56,12 +92,47 @@ function showAuthTab(tab) {
   signUpForm.hidden = isSignIn
 }
 
+function renderCategoryOptions(todo) {
+  return STARTER_CATEGORIES.map((category) => {
+    const isActive = todo.category === category
+    const categoryClass = getCategoryClass(category)
+    return `
+      <button
+        type="button"
+        class="todo-category-option ${categoryClass}${isActive ? ' is-active' : ''}"
+        data-category-value="${escapeHtml(category)}"
+      >${escapeHtml(category)}</button>
+    `
+  }).join('')
+}
+
 function renderTodos() {
   list.innerHTML = todos
     .map((todo) => {
       const completeClass = todo.is_complete ? ' is-complete' : ''
       const completeLabel = todo.is_complete ? 'Mark incomplete' : 'Mark complete'
       const checkMark = todo.is_complete ? '✓' : ''
+      const isEditingCategory = editingCategoryId === todo.id
+
+      const categoryMarkup = todo.category ? renderCategoryBadge(todo.category) : ''
+
+      const categoryPopover = isEditingCategory
+        ? `
+          <div class="todo-category-popover" role="dialog" aria-label="Choose category">
+            <p class="todo-category-popover-label">Category</p>
+            <div class="todo-category-options">${renderCategoryOptions(todo)}</div>
+            <input
+              type="text"
+              class="todo-category-input"
+              data-category-input="${todo.id}"
+              value="${escapeHtml(todo.category || '')}"
+              placeholder="Custom category"
+              aria-label="Custom category"
+            />
+            ${todo.category ? `<button type="button" class="todo-category-remove">Remove category</button>` : ''}
+          </div>
+        `
+        : ''
 
       return `
         <li class="todo-item${completeClass}" data-id="${todo.id}">
@@ -71,12 +142,31 @@ function renderTodos() {
             aria-label="${completeLabel}"
             aria-pressed="${todo.is_complete}"
           >${checkMark}</button>
-          <span class="todo-item-text">${escapeHtml(todo.text)}</span>
-          <button type="button" class="todo-delete-button" aria-label="Delete todo">Del</button>
+          <div class="todo-item-content">
+            ${categoryMarkup}
+            <span class="todo-item-text">${escapeHtml(todo.text)}</span>
+          </div>
+          <div class="todo-item-actions">
+            <div class="todo-category-anchor">
+              <button
+                type="button"
+                class="todo-icon-button todo-category-button"
+                aria-label="${todo.category ? 'Edit category' : 'Add category'}"
+                aria-expanded="${isEditingCategory}"
+              >${CATEGORY_ICON}</button>
+              ${categoryPopover}
+            </div>
+            <button type="button" class="todo-icon-button todo-delete-button" aria-label="Delete todo">${DELETE_ICON}</button>
+          </div>
         </li>
       `
     })
     .join('')
+
+  if (editingCategoryId) {
+    const categoryInput = list.querySelector(`[data-category-input="${editingCategoryId}"]`)
+    if (categoryInput) categoryInput.focus()
+  }
 }
 
 async function ensureSession() {
@@ -110,7 +200,7 @@ async function loadTodos() {
 
   const { data, error } = await supabase
     .from('todos')
-    .select('id, text, is_complete, created_at')
+    .select('id, text, is_complete, category, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: true })
 
@@ -168,6 +258,39 @@ async function deleteTodo(id) {
   }
 
   return true
+}
+
+async function saveCategory(id, category) {
+  const trimmed = category.trim()
+  const { error } = await supabase
+    .from('todos')
+    .update({ category: trimmed || null })
+    .eq('id', id)
+
+  if (error) {
+    console.error('Failed to update category:', error.message)
+    showError(`Could not save category: ${error.message}`)
+    return false
+  }
+
+  editingCategoryId = null
+  await loadTodos()
+  return true
+}
+
+function closeCategoryPopover() {
+  editingCategoryId = null
+  renderTodos()
+}
+
+function startEditingCategory(id) {
+  if (editingCategoryId === id) {
+    closeCategoryPopover()
+    return
+  }
+
+  editingCategoryId = id
+  renderTodos()
 }
 
 async function signInWithEmail(email, password) {
@@ -282,6 +405,22 @@ form.addEventListener('submit', async (event) => {
 })
 
 list.addEventListener('click', async (event) => {
+  if (event.target.closest('.todo-category-popover')) {
+    const item = event.target.closest('.todo-item')
+    const id = Number(item.dataset.id)
+
+    if (event.target.closest('.todo-category-remove')) {
+      await saveCategory(id, '')
+      return
+    }
+
+    if (event.target.closest('.todo-category-option')) {
+      const option = event.target.closest('.todo-category-option')
+      await saveCategory(id, option.dataset.categoryValue)
+    }
+    return
+  }
+
   const item = event.target.closest('.todo-item')
   if (!item) return
 
@@ -290,10 +429,29 @@ list.addEventListener('click', async (event) => {
   if (event.target.closest('.todo-complete-button')) {
     const success = await toggleTodo(id)
     if (success) await loadTodos()
+  } else if (event.target.closest('.todo-category-button')) {
+    startEditingCategory(id)
   } else if (event.target.closest('.todo-delete-button')) {
     const success = await deleteTodo(id)
     if (success) await loadTodos()
   }
+})
+
+list.addEventListener('keydown', async (event) => {
+  if (event.key !== 'Enter') return
+
+  const input = event.target.closest('[data-category-input]')
+  if (!input) return
+
+  event.preventDefault()
+  const id = Number(input.dataset.categoryInput)
+  await saveCategory(id, input.value)
+})
+
+document.addEventListener('click', (event) => {
+  if (!editingCategoryId) return
+  if (event.target.closest('.todo-category-popover') || event.target.closest('.todo-category-button')) return
+  closeCategoryPopover()
 })
 
 async function init() {
